@@ -4,3 +4,5 @@ matplotlib
 numpy
 opencv-python
 json
+ffmpeg
+celluloid
