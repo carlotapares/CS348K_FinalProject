@@ -1,0 +1,6 @@
+ipynb
+youtube_dl
+matplotlib
+numpy
+opencv-python
+json
