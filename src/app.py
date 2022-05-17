@@ -1,6 +1,7 @@
 import streamlit as st
 import pandas as pd
 import numpy as pd
+from ui_utils import get_dataset_subset
 
 # st.title('Visualization')
 # st.write('hello world')
@@ -12,15 +13,17 @@ def initialize_session_state():
     return
 
 
-initialize_session_state()
+#initialize_session_state()
 
 def reset_session_state():
     #TODO clear any session state on reset
     return
 
-df = pd.DataFrame({
-  'first column': [1, 2, 3, 4],
-  'second column': [10, 20, 30, 40]
-})
+num_batches = 3
+batch_size = 2
+res = get_dataset_subset('wimbledon_2019_womens_final_halep_williams__fduc5bZx3ss',
+['player_front','fast'],num_batches,batch_size)
 
-df
+for b in range(num_batches):
+  for i in range(batch_size):
+    st.image(res[b].get_frame_at(i).get_data())

@@ -46,7 +46,7 @@ class Keypoint:
     self.position_ = (x,y)
     self.name_ = name
 
-  def position(self) -> tuple(int,int):
+  def position(self) -> tuple([int,int]):
     return self.position_
 
   def name(self) -> str:
@@ -65,14 +65,11 @@ class Prediction:
 
     return self.keypoints_
 
-  def set_keypoints(self, k: list[Keypoint]) -> None:
+  def set_keypoints(self, k: 'list[Keypoint]') -> None:
     for kp in k:
-      self.__set_keypoint(kp)
+      self.keypoints_[kp.name()] = kp
 
-  def __set_keypoint(self, k: Keypoint) -> None:
-    self.keypoints_[k.name] = k
-
-  def get_bbox(self) -> list[int]:
+  def get_bbox(self) -> 'list[int]':
     return self.bbox_
 
   def set_bbox(self, bbox) -> None:
@@ -94,8 +91,12 @@ def load_poses(path: str) -> dict:
   return json.load(open(path, 'r'))
 
 def get_player_list_position(file: dict, frame: int, player: str) -> int:
-  bbox1 = file[frame][1][0]['xywh']
-  bbox2 = file[frame][1][1]['xywh']
+  if len(file['person'][frame][1]) != 2:
+    return -1
+
+  bbox1 = file['person'][frame][1][0]['xywh']
+  bbox2 = file['person'][frame][1][1]['xywh']
+  
 
   _,y1,_,_ = bbox1
   _,y2,_,_ = bbox2
@@ -106,13 +107,19 @@ def get_player_list_position(file: dict, frame: int, player: str) -> int:
   else:
     return abs(back_player -1)
 
-def get_bounding_box(file: dict, frame: int, player: str) -> tuple(int, int):
+def get_bounding_box(file: dict, frame: int, player: str) -> tuple([int, int]):
   player_pos = get_player_list_position(file, frame, player)
-  return file[frame][1][player_pos]['xywh']
+  if player_pos == -1:
+    return None
+  return file['person'][frame][1][player_pos]['xywh']
 
-def get_keypoints(file: dict, frame: int, player: str) -> list[Keypoint]:
+def get_keypoints(file: dict, frame: int, player: str) -> 'list[Keypoint]':
   player_pos = get_player_list_position(file, frame, player)
-  keypoints =  file[frame][1][player_pos]['pose'][0]
+
+  if player_pos == -1:
+    return None
+
+  keypoints =  file['person'][frame][1][player_pos]['pose'][0]
   out = []
 
   for i, k in enumerate(keypoints):
@@ -120,15 +127,21 @@ def get_keypoints(file: dict, frame: int, player: str) -> list[Keypoint]:
 
   return out
 
+def get_real_frame_number(file: dict, frame: int) -> int:
+  return file['person'][frame][0]
+
 def get_prediction(file: dict, frame: int, player: str) -> Prediction:
   keypoints = get_keypoints(file, frame, player)
   bbox = get_bounding_box(file, frame, player)
+
+  if not keypoints or not bbox:
+    return None
 
   p = Prediction()
   p.set_bbox(bbox)
   p.set_keypoints(keypoints)
   p.set_player(player)
-  p.set_frame_number(frame)
+  p.set_frame_number(get_real_frame_number(file, frame))
   return p
 
 
