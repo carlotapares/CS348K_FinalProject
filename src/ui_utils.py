@@ -10,7 +10,7 @@ sys.path.append('./src/dataset/')
 from data_utils import Prediction, load_poses, get_prediction
 from viz import get_image_data, get_prediction_vis
 
-MIN_PIXEL_DIST_FAST_SPEED = 10 # 7 px displacement per frame
+MIN_PIXEL_DIST_FAST_SPEED = 10 # 10 px displacement per frame
 
 class Frame:
   def __init__(self, data: io.BytesIO, width: int, height: int) -> None:
@@ -139,7 +139,9 @@ class ConditionChecker:
 
     for i in range(1, len(self.predictions_)):
       next_pos = self.predictions_[i].get_bbox()
-      dist += distance.cdist([prev_pos[0:2]], [next_pos[0:2]], 'euclidean')[0][0]
+      mid_prev = [[prev_pos[0] + prev_pos[2]//2, prev_pos[1] + prev_pos[3]//2]]
+      mid_next = [[next_pos[0] + next_pos[2]//2, next_pos[1] + next_pos[3]//2]]
+      dist += distance.cdist(mid_prev, mid_next, 'euclidean')[0][0]
 
     dist /= len(self.predictions_)
 
@@ -154,7 +156,9 @@ class ConditionChecker:
 
     for i in range(1, len(self.predictions_)):
       next_pos = self.predictions_[i].get_bbox()
-      dist += distance.cdist([prev_pos[0:2]], [next_pos[0:2]], 'euclidean')[0][0]
+      mid_prev = [[prev_pos[0] + prev_pos[2]//2, prev_pos[1] + prev_pos[3]//2]]
+      mid_next = [[next_pos[0] + next_pos[2]//2, next_pos[1] + next_pos[3]//2]]
+      dist += distance.cdist(mid_prev, mid_next, 'euclidean')[0][0]
 
     dist /= len(self.predictions_)
 

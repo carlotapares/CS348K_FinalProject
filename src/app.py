@@ -13,7 +13,7 @@ def initialize_session_state():
     return
 
 
-#initialize_session_state()
+initialize_session_state()
 
 def reset_session_state():
     #TODO clear any session state on reset
