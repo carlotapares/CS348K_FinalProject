@@ -2,3 +2,4 @@ dataset
 original_data
 src/.ipynb_checkpoints
 src/__pycache__
+.vscode
