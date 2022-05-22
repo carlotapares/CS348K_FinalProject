@@ -3,8 +3,9 @@ import cv2
 import io
 import matplotlib.pyplot as plt
 from data_utils import Prediction, PoseTrack_Keypoint_Pairs
+from PIL import Image
 
-def get_image_data(path: str, frame: int) -> np.array:
+def get_image_data_from_video(path: str, frame: int) -> np.array:
   cap = cv2.VideoCapture(path + '.mp4')
   cap.set(cv2.CAP_PROP_POS_FRAMES, frame)
   ret, f = cap.read()
@@ -12,6 +13,11 @@ def get_image_data(path: str, frame: int) -> np.array:
       return f
   else:
       raise RuntimeError('No frame obtained.')
+
+def get_image_data(path: str, frame: int) -> np.array:
+  img_path = path + 'frames/thumb' + '{0:04d}'.format(frame) + '.png'
+  img = Image.open(img_path)
+  return np.asarray(img)
 
 def get_prediction_vis(pred: Prediction, image: np.array) -> tuple([io.BytesIO,int,int]):
   keypoints = pred.get_keypoints()

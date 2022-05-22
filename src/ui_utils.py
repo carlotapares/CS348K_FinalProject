@@ -3,9 +3,6 @@ import numpy as np
 from enum import Enum
 import os
 from scipy.spatial import distance
-import sys
-sys.path.append('.')
-sys.path.append('./src/dataset/')
 import streamlit as st
 
 from data_utils import Prediction, load_poses, get_prediction
@@ -187,8 +184,8 @@ class Predicate:
 
   def __load_dataset(self) -> None:
     files = os.listdir(self.path_)
-    if self.filename_ + '.mp4' not in files:
-      raise RuntimeError('Check '+ self.filename_ + '.mp4 file exists in path ' + self.path_)
+    #if self.filename_ + '.mp4' not in files:
+    #  raise RuntimeError('Check '+ self.filename_ + '.mp4 file exists in path ' + self.path_)
     if self.filename_ + '.pose.json' not in files:
       raise RuntimeError('Check '+ self.filename_ + '.pose.json file exists in path ' + self.path_)
     
