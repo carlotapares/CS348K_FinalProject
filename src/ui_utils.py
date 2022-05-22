@@ -6,6 +6,7 @@ from scipy.spatial import distance
 import sys
 sys.path.append('.')
 sys.path.append('./src/dataset/')
+import streamlit as st
 
 from data_utils import Prediction, load_poses, get_prediction
 from viz import get_image_data, get_prediction_vis
@@ -262,6 +263,7 @@ class Predicate:
 
     return out
 
+@st.cache(allow_output_mutation=True)
 def get_dataset_subset(filename: str, tags: 'list[str]', num_batches: int, batch_size: int) -> 'list[Batch]':
   conditions = []
 
