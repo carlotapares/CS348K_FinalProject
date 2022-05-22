@@ -15,7 +15,7 @@ def get_image_data_from_video(path: str, frame: int) -> np.array:
       raise RuntimeError('No frame obtained.')
 
 def get_image_data(path: str, frame: int) -> np.array:
-  img_path = path + '/frames/thumb' + '{0:04d}'.format(frame) + '.png'
+  img_path = path + '/frames/thumb' + '{0:04d}'.format(frame+1) + '.png'
   img = Image.open(img_path)
   return np.asarray(img)
 
