@@ -231,7 +231,7 @@ class Predicate:
         if frames_front:
           batch = Batch()
           for f in frames_front:
-            img = get_image_data(self.path_ + self.filename_, f.get_frame_number())
+            img = get_image_data(self.path_, f.get_frame_number())
             data, w, h = get_prediction_vis(f, img)
             frame = Frame(data, w, h)
             batch.add_frame(frame)
@@ -252,7 +252,7 @@ class Predicate:
         if frames_back:
           batch = Batch()
           for f in frames_back:
-            img = get_image_data(self.path_ + self.filename_, f.get_frame_number())
+            img = get_image_data(self.path_, f.get_frame_number())
             data, w, h = get_prediction_vis(f, img)
             frame = Frame(data, w, h)
             batch.add_frame(frame)

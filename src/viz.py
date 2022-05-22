@@ -15,7 +15,7 @@ def get_image_data_from_video(path: str, frame: int) -> np.array:
       raise RuntimeError('No frame obtained.')
 
 def get_image_data(path: str, frame: int) -> np.array:
-  img_path = path + 'frames/thumb' + '{0:04d}'.format(frame) + '.png'
+  img_path = path + '/frames/thumb' + '{0:04d}'.format(frame) + '.png'
   img = Image.open(img_path)
   return np.asarray(img)
 
@@ -23,7 +23,8 @@ def get_prediction_vis(pred: Prediction, image: np.array) -> tuple([io.BytesIO,i
   keypoints = pred.get_keypoints()
   x,y,w,h = list(map(int, pred.get_bbox()))
 
-  plt.imshow(cv2.cvtColor(image[y:y+h,x:x+w,:], cv2.COLOR_BGR2RGB),alpha=0.6)
+  #plt.imshow(cv2.cvtColor(image[y:y+h,x:x+w,:], cv2.COLOR_BGR2RGB),alpha=0.6)
+  plt.imshow(image[y:y+h,x:x+w,:],alpha=0.6)
 
   for joint_pair in PoseTrack_Keypoint_Pairs:
     ind_1, ind_2, color = joint_pair
