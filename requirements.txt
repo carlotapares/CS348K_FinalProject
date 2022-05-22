@@ -1,8 +1,5 @@
-ipynb
-youtube_dl
 matplotlib
 numpy
 opencv-python
-json
-ffmpeg
-celluloid
+streamlit
+pyngrok==4.1.1
