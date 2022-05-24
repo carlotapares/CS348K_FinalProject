@@ -1,8 +1,7 @@
 import streamlit as st
 import pandas as pd
 import numpy as pd
-from ui_utils import get_dataset_subset
-from ui_utils import Condition
+from ui_utils import Condition, get_dataset_subset, check_assertions
 
 # HARD-CODED PARAMS
 num_batches = 3 # number of search results to return to user  
@@ -36,12 +35,20 @@ cols = st.columns(batch_size)
 # RETURNED RESULTS
 if (query_condition_list):
   st.write(query_condition_list)
-  res = get_dataset_subset('wimbledon_2019_womens_final_halep_williams__fduc5bZx3ss',
-    query_condition_list,num_batches,batch_size)
+  res, dataset = get_dataset_subset('wimbledon_2019_womens_final_halep_williams__fduc5bZx3ss',
+    query_condition_list,num_batches,batch_size, False)
 
-  for b in range(num_batches):
+  st.write('Returned ' + str(len(res)) + ' results.')
+
+  '''for b in range(num_batches):
     for i in range(batch_size):
-      cols[i].image(res[b].get_frame_at(i).get_data(), use_column_width=True)
+      cols[i].image(res[b].get_frame_at(i).get_data(), use_column_width=True)'''
+
+  assertions = [{'keypoints': ['left_shoulder'], 'type': 'temporal', 'attributes': [20]}]
+  errors = check_assertions(dataset, res, assertions)
+  st.dataframe(errors)
+
+
   # res = get_dataset_subset('wimbledon_2019_womens_final_halep_williams__fduc5bZx3ss',
   #   ['player_front','fast'],num_batches,batch_size)
 
@@ -67,6 +74,10 @@ if (query_condition_list):
   # new_label = st.text_input('New Class Name:')
   # checkbox_keys = []
   # submit_button = st.button("Submit", on_click=submit_create_label, kwargs={'checkbox_keys':checkbox_keys, 'new_label':new_label})
+
+
+  
+
 
 
 

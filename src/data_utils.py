@@ -86,6 +86,7 @@ class Prediction:
 
   def set_frame_number(self, frame_number: int) -> None:
     self.frame_number_ = frame_number
+
   
 def load_poses(path: str) -> dict:
   return json.load(open(path, 'r'))
@@ -143,6 +144,3 @@ def get_prediction(file: dict, frame: int, player: str) -> Prediction:
   p.set_player(player)
   p.set_frame_number(get_real_frame_number(file, frame))
   return p
-
-
-

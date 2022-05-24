@@ -4,18 +4,21 @@ from enum import Enum
 import os
 from scipy.spatial import distance
 import streamlit as st
+import pandas as pd
 
 from data_utils import Prediction, load_poses, get_prediction
-from viz import get_image_data, get_prediction_vis
+from assertions import Assertion, AssertionChecker, AssertionFunction
+from viz import get_image_data, get_prediction_vis, get_image_data_from_video
 
 MIN_PIXEL_DIST_FAST_SPEED = 10 # 10 px displacement per frame
 
 class Frame:
-  def __init__(self, data: io.BytesIO, width: int, height: int) -> None:
+  def __init__(self, data: io.BytesIO, width: int, height: int, prediction: Prediction) -> None:
     self.data_ = data
     self.width_ = width
     self.height_ = height
     self.channels_ = 'RGB'
+    self.prediction_ = prediction
 
   def width(self) -> int:
     return self.width_
@@ -28,6 +31,9 @@ class Frame:
 
   def get_data(self) -> io.BytesIO:
     return self.data_
+
+  def get_prediction(self) -> Prediction:
+    return self.prediction_
 
 class Batch:
   def __init__(self) -> None:
@@ -172,7 +178,7 @@ class ConditionChecker:
     return self.predictions_[0].get_player() == 'front'
 
 class Predicate:
-  def __init__(self, filename: str, conditions: 'list[Condition]', num_batches: int, batch_size: int) -> None:
+  def __init__(self, filename: str, conditions: 'list[Condition]', num_batches: int, batch_size: int, include_display=False) -> None:
     self.filename_ = filename
     self.conditions_ = conditions
     self.num_batches_ = num_batches
@@ -181,18 +187,22 @@ class Predicate:
     self.path_ = './dataset/'
     self.time_between_batches_ = 3
     self.FPS_ = 25
+    self.include_display_ = include_display
 
-  def __load_dataset(self) -> None:
-    files = os.listdir(self.path_)
-    #if self.filename_ + '.mp4' not in files:
-    #  raise RuntimeError('Check '+ self.filename_ + '.mp4 file exists in path ' + self.path_)
-    if self.filename_ + '.pose.json' not in files:
-      raise RuntimeError('Check '+ self.filename_ + '.pose.json file exists in path ' + self.path_)
+  def __load_dataset(self, path, filename) -> dict:
+    files = os.listdir(path)
+    if filename + '.pose.json' not in files:
+      raise RuntimeError('Check '+ filename + '.pose.json file exists in path ' + path)
     
-    self.dataset_ = load_poses(self.path_ + self.filename_ + '.pose.json')
+    return load_poses(path + filename + '.pose.json')
+
+  def get_dataset(self) -> dict:
+    if not self.dataset_:
+      raise RuntimeError('Returning an empty dataset')
+    return self.dataset_
   
   def run(self) -> 'list[Batch]':
-    self.__load_dataset()
+    self.dataset_ = self.load_dataset(self.path_, self.filename_)
     out = []
     lb = 0
 
@@ -227,15 +237,20 @@ class Predicate:
             frames_front = None
             break
 
-        # If frames passed conditions, get visualization
+        
+        # If frames passed conditions
         if frames_front:
           batch = Batch()
           for f in frames_front:
-            img = get_image_data(self.path_, f.get_frame_number())
-            data, w, h = get_prediction_vis(f, img)
-            frame = Frame(data, w, h)
+            if self.include_display_:
+              img = get_image_data(self.path_, f.get_frame_number())
+              data, w, h = get_prediction_vis(f, img)
+              frame = Frame(data, w, h, f)
+            else:
+              frame = Frame(None, -1, -1, f)
             batch.add_frame(frame)
           out.append(batch)
+        
 
       if frames_back:
         cond_checker_back = ConditionChecker()
@@ -248,20 +263,25 @@ class Predicate:
             frames_back = None
             break
       
-        # If frames passed conditions, get visualization
+        # If frames passed conditions
         if frames_back:
           batch = Batch()
           for f in frames_back:
-            img = get_image_data(self.path_, f.get_frame_number())
-            data, w, h = get_prediction_vis(f, img)
-            frame = Frame(data, w, h)
+            if self.include_display_:
+              img = get_image_data(self.path_, f.get_frame_number())
+              data, w, h = get_prediction_vis(f, img)
+              frame = Frame(data, w, h, f)
+            else:
+              frame = Frame(None, -1, -1, f)
             batch.add_frame(frame)
           out.append(batch)
 
     return out
 
+
+
 @st.cache(allow_output_mutation=True)
-def get_dataset_subset(filename: str, tags: 'list[str]', num_batches: int, batch_size: int) -> 'list[Batch]':
+def get_dataset_subset(filename: str, tags: 'list[str]', num_batches: int, batch_size: int, include_display=False) -> 'list[Batch]':
   conditions = []
 
   for tag in tags:
@@ -273,5 +293,21 @@ def get_dataset_subset(filename: str, tags: 'list[str]', num_batches: int, batch
     else:
       raise RuntimeError('Tag ' + tag + ' is not supported')
 
-  p = Predicate(filename, conditions, num_batches, batch_size)
-  return p.run()
+  p = Predicate(filename, conditions, num_batches, batch_size, include_display)
+  result = p.run()
+  return result, p.get_dataset()
+
+@st.cache(allow_output_mutation=True)
+def check_assertions(dataset: dict, input: 'list[Prediction]', assertions = 'list[dict]') -> pd.DataFrame:
+  a = AssertionChecker(dataset)
+  for asst in assertions:
+    a.register_assertion(Assertion(AssertionFunction(asst['keypoints'], asst['type'], asst['attributes'])))
+
+  a.check(input)
+  return a.retrieve_errors()
+
+  
+
+
+
+
