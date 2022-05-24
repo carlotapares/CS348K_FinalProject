@@ -202,7 +202,7 @@ class Predicate:
     return self.dataset_
   
   def run(self) -> 'list[Batch]':
-    self.dataset_ = self.load_dataset(self.path_, self.filename_)
+    self.dataset_ = self.__load_dataset(self.path_, self.filename_)
     out = []
     lb = 0
 
@@ -239,11 +239,12 @@ class Predicate:
 
         
         # If frames passed conditions
-        if frames_front:
+        if frames_front and len(out) < self.num_batches_:
           batch = Batch()
           for f in frames_front:
             if self.include_display_:
-              img = get_image_data(self.path_, f.get_frame_number())
+              #img = get_image_data(self.path_, f.get_real_frame_number()+1)
+              img = get_image_data_from_video(self.path_ + self.filename_, f.get_real_frame_number())
               data, w, h = get_prediction_vis(f, img)
               frame = Frame(data, w, h, f)
             else:
@@ -252,7 +253,7 @@ class Predicate:
           out.append(batch)
         
 
-      if frames_back:
+      if frames_back and len(out) < self.num_batches_:
         cond_checker_back = ConditionChecker()
         cond_checker_back.set_predictions(frames_back)
 
@@ -268,7 +269,8 @@ class Predicate:
           batch = Batch()
           for f in frames_back:
             if self.include_display_:
-              img = get_image_data(self.path_, f.get_frame_number())
+              #img = get_image_data(self.path_, f.get_real_frame_number()+1)
+              img = get_image_data_from_video(self.path_ + self.filename_, f.get_real_frame_number())
               data, w, h = get_prediction_vis(f, img)
               frame = Frame(data, w, h, f)
             else:
@@ -280,8 +282,8 @@ class Predicate:
 
 
 
-@st.cache(allow_output_mutation=True)
-def get_dataset_subset(filename: str, tags: 'list[str]', num_batches: int, batch_size: int, include_display=False) -> 'list[Batch]':
+#@st.cache(allow_output_mutation=True)
+def get_dataset_subset(filename: str, tags: 'list[str]', num_batches: int, batch_size: int, include_display=False) -> tuple(['list[Batch]', dict]):
   conditions = []
 
   for tag in tags:
@@ -297,14 +299,36 @@ def get_dataset_subset(filename: str, tags: 'list[str]', num_batches: int, batch
   result = p.run()
   return result, p.get_dataset()
 
-@st.cache(allow_output_mutation=True)
-def check_assertions(dataset: dict, input: 'list[Prediction]', assertions = 'list[dict]') -> pd.DataFrame:
+#@st.cache(allow_output_mutation=True)
+def check_assertions(dataset: dict, input: 'list[Batch]', assertions = 'list[dict]', include_display=False) -> tuple([pd.DataFrame, 'list[Frame]']):
   a = AssertionChecker(dataset)
   for asst in assertions:
     a.register_assertion(Assertion(AssertionFunction(asst['keypoints'], asst['type'], asst['attributes'])))
 
-  a.check(input)
-  return a.retrieve_errors()
+  preds = []
+  for b in input:
+    for f in b.get_frames():
+      preds.append(f.get_prediction())
+
+  a.check(preds)
+  errors = a.retrieve_errors()
+
+  if include_display:
+    frames = []
+    frame_num = errors.loc[:,'frame_number'].tolist()
+    pred_idx = errors.loc[:,'prediction_idx'].tolist()
+    
+    for ii, f in enumerate(frame_num):
+      #img = get_image_data(self.path_, f+1)
+      img = get_image_data_from_video('./dataset/' + 'wimbledon_2019_womens_final_halep_williams__fduc5bZx3ss', f)
+      data, w, h = get_prediction_vis(preds[pred_idx[ii]], img)
+      frame = Frame(data, w, h, preds[pred_idx[ii]])
+      frames.append(frame)
+
+    return errors, frames
+
+  else:
+    return errors, None
 
   
 

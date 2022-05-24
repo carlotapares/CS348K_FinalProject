@@ -57,7 +57,8 @@ class Prediction:
     self.keypoints_ = {}
     self.bbox_ = None
     self.player_ = None
-    self.frame_number_ = -1
+    self.real_frame_number_ = -1
+    self.relative_frame_number_ = -1
 
   def get_keypoints(self) -> dict:
     if len(list(self.keypoints_.keys())) == 0:
@@ -81,11 +82,17 @@ class Prediction:
   def set_player(self, player: str) -> None:
     self.player_ = player
 
-  def get_frame_number(self) -> int:
-    return self.frame_number_
+  def get_real_frame_number(self) -> int:
+    return self.real_frame_number_
 
-  def set_frame_number(self, frame_number: int) -> None:
-    self.frame_number_ = frame_number
+  def set_real_frame_number(self, frame_number: int) -> None:
+    self.real_frame_number_ = frame_number
+
+  def get_relative_frame_number(self) -> int:
+    return self.relative_frame_number_
+
+  def set_relative_frame_number(self, frame_number: int) -> None:
+    self.relative_frame_number_ = frame_number
 
   
 def load_poses(path: str) -> dict:
@@ -142,5 +149,6 @@ def get_prediction(file: dict, frame: int, player: str) -> Prediction:
   p.set_bbox(bbox)
   p.set_keypoints(keypoints)
   p.set_player(player)
-  p.set_frame_number(get_real_frame_number(file, frame))
+  p.set_relative_frame_number(frame)
+  p.set_real_frame_number(get_real_frame_number(file, frame))
   return p

@@ -14,7 +14,7 @@ def initialize_session_state():
 #       st.session_state['seen_image_indices_list'] = []
     return
 
-initialize_session_state()
+#initialize_session_state()
 
 def reset_session_state():
     #TODO clear any session state on reset
@@ -23,30 +23,39 @@ def reset_session_state():
 
 
 # USER SEARCH INPUT IN SIDE BAR
-with st.sidebar:
+'''with st.sidebar:
   # mutliselect for 
   query_condition_list = st.multiselect('Search Filters', [c.name for c in Condition])
   batch_size = st.number_input('Number frames per clip', min_value=1, max_value=7, value=5)
 
 ## LAYOUT - 2 cols
-cols = st.columns(batch_size)
+cols = st.columns(batch_size)'''
 
 
 # RETURNED RESULTS
-if (query_condition_list):
+'''if (query_condition_list):
   st.write(query_condition_list)
-  res, dataset = get_dataset_subset('wimbledon_2019_womens_final_halep_williams__fduc5bZx3ss',
-    query_condition_list,num_batches,batch_size, False)
+  res, _ = get_dataset_subset('wimbledon_2019_womens_final_halep_williams__fduc5bZx3ss',
+    query_condition_list,num_batches,batch_size, True)
 
   st.write('Returned ' + str(len(res)) + ' results.')
 
-  '''for b in range(num_batches):
+  for b in range(num_batches):
     for i in range(batch_size):
       cols[i].image(res[b].get_frame_at(i).get_data(), use_column_width=True)'''
 
-  assertions = [{'keypoints': ['left_shoulder'], 'type': 'temporal', 'attributes': [20]}]
-  errors = check_assertions(dataset, res, assertions)
-  st.dataframe(errors)
+res, dataset = get_dataset_subset('wimbledon_2019_womens_final_halep_williams__fduc5bZx3ss',
+    ['fast','player_back'],5, 20, False)
+
+assertions = [{'keypoints': ['right_wrist'], 'type': 'temporal', 'attributes': [0.15]}]
+errors, frames = check_assertions(dataset, res, assertions, True)
+
+print(errors)
+
+st.dataframe(errors)
+for f in frames:
+  st.image(f.get_data())
+
 
 
   # res = get_dataset_subset('wimbledon_2019_womens_final_halep_williams__fduc5bZx3ss',
