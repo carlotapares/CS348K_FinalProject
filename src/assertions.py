@@ -162,17 +162,17 @@ class AssertionChecker:
           keypoint_positions.append(k[kp].position())
 
         # Relative position between keypoints
-        if PositionCondition.exists(atts[0]) and len(kps) == len(atts) * 2:
+        if PositionCondition.exists(atts[0]) and len(kps) == len(atts) * 2 and len(kps) % 2 == 0:
 
           cond_results = [True] * len(atts)
           for j, c in enumerate(atts):
             cd = PositionCondition.from_name(c)
             if cd is PositionCondition.ABOVE:
-              if keypoint_positions[j*2][1] < keypoint_positions[j*2+1][1]:
+              if keypoint_positions[j*2][1] > keypoint_positions[j*2+1][1]:
                 cond_results[j] = False
               
             elif cd is PositionCondition.BELOW:
-              if keypoint_positions[j*2][1] > keypoint_positions[j*2+1][1]:
+              if keypoint_positions[j*2][1] < keypoint_positions[j*2+1][1]:
                 cond_results[j] = False
 
             elif cd is PositionCondition.LEFT:
@@ -184,21 +184,28 @@ class AssertionChecker:
                 cond_results[j] = False
             else:
               raise RuntimeError('Incorrect condition: ' + c + ' for assertion: ' + asst.name())
-
-          if sum(cond_results) not in [0, len(atts)]:
+          if cond_results[0] and sum(cond_results) not in [0, len(atts)] or len(atts) == 1 and sum(cond_results) == 0:
             errors.append(LabellingError(asst, p, ii))
 
-        # Distance between two keypoints the height of the bounding box
-        
-        elif len(kps) == 2 and len(atts) == 2 and SizeCondition.exists(atts[0]) and type(atts[1]) in [float, int]:
-            bbox_height = p.get_bbox()[-1]
-            c = SizeCondition.from_name(atts[0])
-            if c is SizeCondition.BIGGER:
-              if abs(distance.cdist([keypoint_positions[0]], [keypoint_positions[1]], 'euclidean')[0][0]) < atts[1]*bbox_height:
-                errors.append(LabellingError(asst, p, ii))
+        # Relative distance between keypoints wrt the height of the bounding box
+        elif len(atts[0]) == 2 and SizeCondition.exists(atts[0][0]) and len(kps) == len(atts) * 2 and len(kps) % 2 == 0:
+          bbox_height = p.get_bbox()[-1]
+          cond_results = [True] * len(atts)
+
+          for j, c in enumerate(atts):
+            cd = SizeCondition.from_name(c[0])
+            
+            if cd is SizeCondition.BIGGER and type(c[1]) in [int, float]:
+              if abs(distance.cdist([keypoint_positions[2*j]], [keypoint_positions[2*j+1]], 'euclidean')[0][0]) < c[1]*bbox_height:
+                cond_results[j] = False
+            elif cd is SizeCondition.SMALLER and type(c[1]) in [int, float]:
+              if abs(distance.cdist([keypoint_positions[2*j]], [keypoint_positions[2*j+1]], 'euclidean')[0][0]) > c[1]*bbox_height:
+                cond_results[j] = False
             else:
-              if abs(distance.cdist([keypoint_positions[0]], [keypoint_positions[1]], 'euclidean')[0][0]) > atts[1]*bbox_height:
-                errors.append(LabellingError(asst, p, ii))
+              raise RuntimeError('Incorrect condition: ' + str(c) + ' for assertion: ' + asst.name())
+
+          if cond_results[0] and sum(cond_results) not in [0, len(atts)] or len(atts) == 1 and sum(cond_results) == 0:
+            errors.append(LabellingError(asst, p, ii))
           
         else:
           raise RuntimeError('Wrong params for assertion: ' + asst.name())
@@ -228,7 +235,6 @@ class AssertionChecker:
             dist.append(abs(distance.cdist([[x1,y1]], [[x2,y2]], 'euclidean')[0][0]))
 
           if np.min(dist) > atts[0]*p1.get_bbox()[3]:
-            print(np.min(dist))
             errors.append(LabellingError(asst, p1, ii))
 
       else:

@@ -45,11 +45,11 @@ cols = st.columns(batch_size)'''
       cols[i].image(res[b].get_frame_at(i).get_data(), use_column_width=True)'''
 
 res, dataset = get_dataset_subset('wimbledon_2019_womens_final_halep_williams__fduc5bZx3ss',
-    ['fast','player_back'],5, 20, False)
+    ['fast','player_back'],4, 25, False)
 
-#assertions = [{'keypoints': ['right_elbow','right_shoulder','right_wrist', 'right_shoulder'], 'type': 'spatial', 'attributes': ['above', 'below']}]
-assertions = [{'keypoints': ['left_knee','right_knee', 'left_ankle','right_ankle',], 'type': 'spatial', 'attributes': ['left','left']}, \
-              {'keypoints': ['right_wrist','right_shoulder'], 'type': 'spatial', 'attributes': ['bigger', 0.1]}]
+assertions = [{'keypoints': ['right_elbow','right_shoulder','right_wrist', 'right_shoulder'], 'type': 'spatial', 'attributes': ['above', 'above']}, \
+              {'keypoints': ['left_elbow','right_elbow','left_wrist','right_wrist'], 'type': 'spatial', 'attributes': [('smaller', 0.1),('smaller', 0.1)]}, \
+              {'keypoints': ['right_wrist'], 'type': 'temporal', 'attributes': [0.2]}]
 
 errors, frames = check_assertions(dataset, res, assertions, True)
 
