@@ -6,9 +6,9 @@ import numpy as np
 from data_utils import Prediction, PoseTrack_COCO_Keypoint_Ordering, get_prediction
 
 class PositionCondition(Enum):
-  ABOVE = "above",
-  BELOW = "below",
-  RIGHT = "right",
+  ABOVE = "above"
+  BELOW = "below"
+  RIGHT = "right"
   LEFT = "left"
 
   def __init__(self, name):
@@ -28,7 +28,7 @@ class PositionCondition(Enum):
       if item.value == name: return item
 
 class SizeCondition(Enum):
-  BIGGER = "bigger",
+  BIGGER = "bigger"
   SMALLER = "smaller"
 
   def __init__(self, name):
@@ -151,49 +151,57 @@ class AssertionChecker:
       atts = fn.attributes()
       kps = fn.keypoints()
       errors = []
-      keypoint_positions = []
 
       if not all(kp in PoseTrack_COCO_Keypoint_Ordering for kp in kps):
         raise RuntimeError('Incorrect keypoints: ' + '-'.join(kps))
 
       for ii, p in enumerate(input):
+        keypoint_positions = []
         k = p.get_keypoints()
         for kp in kps:
           keypoint_positions.append(k[kp].position())
 
         # Relative position between keypoints
-        if atts[0] is PositionCondition and len(kps) == len(atts) - 1:
+        if PositionCondition.exists(atts[0]) and len(kps) == len(atts) * 2:
+
+          cond_results = [True] * len(atts)
           for j, c in enumerate(atts):
-            if c is PositionCondition.ABOVE:
-              if keypoint_positions[j][1] < keypoint_positions[j+1][1]:
-                errors.append(LabellingError(asst, p, ii))
+            cd = PositionCondition.from_name(c)
+            if cd is PositionCondition.ABOVE:
+              if keypoint_positions[j*2][1] < keypoint_positions[j*2+1][1]:
+                cond_results[j] = False
               
-            elif c is PositionCondition.BELOW:
-              if keypoint_positions[j][1] > keypoint_positions[j+1][1]:
-                errors.append(LabellingError(asst, p, ii))
+            elif cd is PositionCondition.BELOW:
+              if keypoint_positions[j*2][1] > keypoint_positions[j*2+1][1]:
+                cond_results[j] = False
 
-            elif c is PositionCondition.LEFT:
-              if keypoint_positions[j][0] > keypoint_positions[j+1][0]:
-                errors.append(LabellingError(asst, p, ii))
+            elif cd is PositionCondition.LEFT:
+              if keypoint_positions[j*2][0] > keypoint_positions[j*2+1][0]:
+                cond_results[j] = False
 
-            elif c is PositionCondition.RIGHT:
-              if keypoint_positions[j][0] < keypoint_positions[j+1][0]:
-                errors.append(LabellingError(asst, p, ii))
+            elif cd is PositionCondition.RIGHT:
+              if keypoint_positions[j*2][0] < keypoint_positions[j*2+1][0]:
+                cond_results[j] = False
             else:
-              raise RuntimeError('Incorrect condition: ' + c.name + ' for assertion: ' + asst.name())
+              raise RuntimeError('Incorrect condition: ' + c + ' for assertion: ' + asst.name())
 
-        # Size of a joint relative to the height of the bounding box
-        elif len(kps) == 2 and len(atts) == 2 and atts[0] is SizeCondition and type(atts[1]) in [float, int]:
+          if sum(cond_results) not in [0, len(atts)]:
+            errors.append(LabellingError(asst, p, ii))
+
+        # Distance between two keypoints the height of the bounding box
+        
+        elif len(kps) == 2 and len(atts) == 2 and SizeCondition.exists(atts[0]) and type(atts[1]) in [float, int]:
             bbox_height = p.get_bbox()[-1]
-            if atts[0] is SizeCondition.BIGGER:
-              if abs(distance.cdist([[keypoint_positions[0]]], [[keypoint_positions[1]]], 'euclidean')[0][0]) < atts[1]*bbox_height:
+            c = SizeCondition.from_name(atts[0])
+            if c is SizeCondition.BIGGER:
+              if abs(distance.cdist([keypoint_positions[0]], [keypoint_positions[1]], 'euclidean')[0][0]) < atts[1]*bbox_height:
                 errors.append(LabellingError(asst, p, ii))
             else:
-              if abs(distance.cdist([[keypoint_positions[0]]], [[keypoint_positions[1]]], 'euclidean')[0][0]) > atts[1]*bbox_height:
+              if abs(distance.cdist([keypoint_positions[0]], [keypoint_positions[1]], 'euclidean')[0][0]) > atts[1]*bbox_height:
                 errors.append(LabellingError(asst, p, ii))
           
         else:
-          raise RuntimeError('Wrong number of keypoints and attributes for assertion: ' + asst.name())
+          raise RuntimeError('Wrong params for assertion: ' + asst.name())
 
       return errors
 

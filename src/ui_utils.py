@@ -313,6 +313,9 @@ def check_assertions(dataset: dict, input: 'list[Batch]', assertions = 'list[dic
   a.check(preds)
   errors = a.retrieve_errors()
 
+  if errors is None:
+    return None, None
+
   if include_display:
     frames = []
     frame_num = errors.loc[:,'frame_number'].tolist()

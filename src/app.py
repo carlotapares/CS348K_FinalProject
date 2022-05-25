@@ -47,15 +47,17 @@ cols = st.columns(batch_size)'''
 res, dataset = get_dataset_subset('wimbledon_2019_womens_final_halep_williams__fduc5bZx3ss',
     ['fast','player_back'],5, 20, False)
 
-assertions = [{'keypoints': ['right_wrist'], 'type': 'temporal', 'attributes': [0.15]}]
+#assertions = [{'keypoints': ['right_elbow','right_shoulder','right_wrist', 'right_shoulder'], 'type': 'spatial', 'attributes': ['above', 'below']}]
+assertions = [{'keypoints': ['left_knee','right_knee', 'left_ankle','right_ankle',], 'type': 'spatial', 'attributes': ['left','left']}, \
+              {'keypoints': ['right_wrist','right_shoulder'], 'type': 'spatial', 'attributes': ['bigger', 0.1]}]
+
 errors, frames = check_assertions(dataset, res, assertions, True)
 
 print(errors)
-
-st.dataframe(errors)
-for f in frames:
-  st.image(f.get_data())
-
+if errors is not None:
+  st.dataframe(errors)
+  for f in frames:
+    st.image(f.get_data())
 
 
   # res = get_dataset_subset('wimbledon_2019_womens_final_halep_williams__fduc5bZx3ss',
