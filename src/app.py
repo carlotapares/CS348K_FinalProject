@@ -1,7 +1,21 @@
 import streamlit as st
 import pandas as pd
-import numpy as pd
+import numpy as np
+import argparse
+import os
 from ui_utils import Condition, get_dataset_subset, check_assertions
+
+DATASET_PATH = './dataset/'
+
+parser = argparse.ArgumentParser()
+parser.add_argument('--dataset', default=['./dataset/'],
+                    help="Add dataset path")
+
+try:
+  args = parser.parse_args()
+  DATASET_PATH = args.dataset[0]
+except SystemExit as e:
+  os._exit(e.code)
 
 # HARD-CODED PARAMS
 num_batches = 3 # number of search results to return to user  
@@ -35,7 +49,7 @@ def reset_session_state():
 # RETURNED RESULTS
 # if (query_condition_list):
 #   st.write(query_condition_list)
-#   res, _ = get_dataset_subset('wimbledon_2019_womens_final_halep_williams__fduc5bZx3ss',
+#   res, _ = get_dataset_subset(DATASET_PATH + 'wimbledon_2019_womens_final_halep_williams__fduc5bZx3ss',
 #     query_condition_list,num_batches,batch_size, True)
 
 #   st.write('Returned ' + str(len(res)) + ' results.')
@@ -44,8 +58,8 @@ def reset_session_state():
 #     for i in range(batch_size):
 #       cols[i].image(res[b].get_frame_at(i).get_data(), use_column_width=True)
 
-res, dataset = get_dataset_subset('wimbledon_2019_womens_final_halep_williams__fduc5bZx3ss',
-    ['fast', 'player_back'],50, 10, False)
+res, dataset = get_dataset_subset(DATASET_PATH + 'wimbledon_2019_womens_final_halep_williams__fduc5bZx3ss',
+    ['fast', 'player_back'],5, 10, False)
 
 assertions = [{'keypoints': ['right_elbow','right_shoulder','right_wrist', 'right_shoulder'], 'type': 'spatial', 'attributes': ['above', 'above']}, \
               {'keypoints': ['left_shoulder','right_shoulder','left_knee', 'right_knee', 'left_hip', 'right_hip'], 'type': 'spatial', 'attributes': ['left', 'left', 'left']}, \
@@ -56,13 +70,14 @@ assertions = [{'keypoints': ['right_elbow','right_shoulder','right_wrist', 'righ
               {'keypoints': ['right_wrist'], 'type': 'temporal', 'attributes': [0.3]},
               {'keypoints': ['left_wrist'], 'type': 'temporal', 'attributes': [0.3]}]
 
-errors, frames = check_assertions(dataset, res, assertions, True)
+errors, frames = check_assertions(DATASET_PATH, dataset, res, assertions, False)
 
 print(errors)
 if errors is not None:
   st.dataframe(errors)
-  for f in frames:
-    st.image(f.get_data())
+  if frames is not None:
+    for f in frames:
+      st.image(f.get_data())
 
 
   # res = get_dataset_subset('wimbledon_2019_womens_final_halep_williams__fduc5bZx3ss',

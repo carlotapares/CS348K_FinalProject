@@ -180,21 +180,14 @@ class ConditionChecker:
 class Predicate:
   def __init__(self, filename: str, conditions: 'list[Condition]', num_batches: int, batch_size: int, include_display=False) -> None:
     self.filename_ = filename
+    self.path_ = '/'.join(filename.split('/')[:-1])
     self.conditions_ = conditions
     self.num_batches_ = num_batches
     self.batch_size_ = batch_size
     self.dataset_ = None
-    self.path_ = './dataset/'
     self.time_between_batches_ = 3
     self.FPS_ = 25
     self.include_display_ = include_display
-
-  def __load_dataset(self, path, filename) -> dict:
-    files = os.listdir(path)
-    if filename + '.pose.json' not in files:
-      raise RuntimeError('Check '+ filename + '.pose.json file exists in path ' + path)
-    
-    return load_poses(path + filename + '.pose.json')
 
   def get_dataset(self) -> dict:
     if not self.dataset_:
@@ -202,7 +195,7 @@ class Predicate:
     return self.dataset_
   
   def run(self) -> 'list[Batch]':
-    self.dataset_ = self.__load_dataset(self.path_, self.filename_)
+    self.dataset_ = load_poses(self.filename_ + '.pose.json')
     out = []
     lb = 0
 
@@ -280,7 +273,6 @@ class Predicate:
 
     return out
 
-@st.cache(allow_output_mutation=True)
 def get_dataset_subset(filename: str, tags: 'list[str]', num_batches: int, batch_size: int, include_display=False) -> tuple(['list[Batch]', dict]):
   conditions = []
 
@@ -297,8 +289,7 @@ def get_dataset_subset(filename: str, tags: 'list[str]', num_batches: int, batch
   result = p.run()
   return result, p.get_dataset()
 
-@st.cache(allow_output_mutation=True)
-def check_assertions(dataset: dict, input: 'list[Batch]', assertions = 'list[dict]', include_display=False) -> tuple([pd.DataFrame, 'list[Frame]']):
+def check_assertions(path: str, dataset: dict, input: 'list[Batch]', assertions = 'list[dict]', include_display=False) -> tuple([pd.DataFrame, 'list[Frame]']):
   a = AssertionChecker(dataset)
   for asst in assertions:
     a.register_assertion(Assertion(AssertionFunction(asst['keypoints'], asst['type'], asst['attributes'])))
@@ -320,7 +311,7 @@ def check_assertions(dataset: dict, input: 'list[Batch]', assertions = 'list[dic
     pred_idx = errors.loc[:,'prediction_idx'].tolist()
     
     for ii, f in enumerate(frame_num):
-      img = get_image_data('./dataset/', f+1)
+      img = get_image_data(path, f+1)
       # img = get_image_data_from_video('./dataset/' + 'wimbledon_2019_womens_final_halep_williams__fduc5bZx3ss', f)
       data, w, h = get_prediction_vis(preds[pred_idx[ii]], img)
       frame = Frame(data, w, h, preds[pred_idx[ii]])
