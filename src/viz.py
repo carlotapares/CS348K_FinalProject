@@ -6,6 +6,7 @@ matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 from data_utils import Prediction, PoseTrack_Keypoint_Pairs
 from PIL import Image
+from matplotlib import image
 
 def get_image_data_from_video(path: str, frame: int) -> np.array:
   cap = cv2.VideoCapture(path + '.mp4')
@@ -18,7 +19,7 @@ def get_image_data_from_video(path: str, frame: int) -> np.array:
 
 def get_image_data(path: str, frame: int) -> np.array:
   img_path = path + '/frames/thumb' + '{0:04d}'.format(frame+1) + '.png'
-  img = Image.open(img_path)
+  img = image.imread(img_path)
   return np.asarray(img)
 
 def get_prediction_vis(pred: Prediction, image: np.array) -> tuple([io.BytesIO,int,int]):

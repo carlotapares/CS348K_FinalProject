@@ -70,7 +70,7 @@ assertions = [{'keypoints': ['right_elbow','right_shoulder','right_wrist', 'righ
               {'keypoints': ['right_wrist'], 'type': 'temporal', 'attributes': [0.3]},
               {'keypoints': ['left_wrist'], 'type': 'temporal', 'attributes': [0.3]}]
 
-errors, frames = check_assertions(DATASET_PATH, dataset, res, assertions, False)
+errors, frames = check_assertions(DATASET_PATH + 'wimbledon_2019_womens_final_halep_williams__fduc5bZx3ss', dataset, res, assertions, True)
 
 print(errors)
 if errors is not None:

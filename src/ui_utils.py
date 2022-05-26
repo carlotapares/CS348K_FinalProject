@@ -236,8 +236,8 @@ class Predicate:
           batch = Batch()
           for f in frames_front:
             if self.include_display_:
-              img = get_image_data(self.path_, f.get_real_frame_number()+1)
-              # img = get_image_data_from_video(self.path_ + self.filename_, f.get_real_frame_number())
+              # img = get_image_data(self.path_, f.get_real_frame_number()+1)
+              img = get_image_data_from_video(self.path_ + self.filename_, f.get_real_frame_number())
               data, w, h = get_prediction_vis(f, img)
               frame = Frame(data, w, h, f)
             else:
@@ -262,8 +262,8 @@ class Predicate:
           batch = Batch()
           for f in frames_back:
             if self.include_display_:
-              img = get_image_data(self.path_, f.get_real_frame_number()+1)
-              # img = get_image_data_from_video(self.path_ + self.filename_, f.get_real_frame_number())
+              # img = get_image_data(self.path_, f.get_real_frame_number()+1)
+              img = get_image_data_from_video(self.path_ + self.filename_, f.get_real_frame_number())
               data, w, h = get_prediction_vis(f, img)
               frame = Frame(data, w, h, f)
             else:
@@ -311,8 +311,8 @@ def check_assertions(path: str, dataset: dict, input: 'list[Batch]', assertions 
     pred_idx = errors.loc[:,'prediction_idx'].tolist()
     
     for ii, f in enumerate(frame_num):
-      img = get_image_data(path, f+1)
-      # img = get_image_data_from_video('./dataset/' + 'wimbledon_2019_womens_final_halep_williams__fduc5bZx3ss', f)
+      # img = get_image_data(path, f+1)
+      img = get_image_data_from_video(path, f)
       data, w, h = get_prediction_vis(preds[pred_idx[ii]], img)
       frame = Frame(data, w, h, preds[pred_idx[ii]])
       frames.append(frame)
