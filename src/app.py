@@ -14,7 +14,7 @@ def initialize_session_state():
 #       st.session_state['seen_image_indices_list'] = []
     return
 
-#initialize_session_state()
+initialize_session_state()
 
 def reset_session_state():
     #TODO clear any session state on reset
@@ -23,33 +23,38 @@ def reset_session_state():
 
 
 # USER SEARCH INPUT IN SIDE BAR
-'''with st.sidebar:
+# with st.sidebar:
   # mutliselect for 
-  query_condition_list = st.multiselect('Search Filters', [c.name for c in Condition])
-  batch_size = st.number_input('Number frames per clip', min_value=1, max_value=7, value=5)
+  # query_condition_list = st.multiselect('Search Filters', [c.name for c in Condition])
+  # batch_size = st.number_input('Number frames per clip', min_value=1, max_value=7, value=5)
 
 ## LAYOUT - 2 cols
-cols = st.columns(batch_size)'''
+# cols = st.columns(batch_size)
 
 
 # RETURNED RESULTS
-'''if (query_condition_list):
-  st.write(query_condition_list)
-  res, _ = get_dataset_subset('wimbledon_2019_womens_final_halep_williams__fduc5bZx3ss',
-    query_condition_list,num_batches,batch_size, True)
+# if (query_condition_list):
+#   st.write(query_condition_list)
+#   res, _ = get_dataset_subset('wimbledon_2019_womens_final_halep_williams__fduc5bZx3ss',
+#     query_condition_list,num_batches,batch_size, True)
 
-  st.write('Returned ' + str(len(res)) + ' results.')
+#   st.write('Returned ' + str(len(res)) + ' results.')
 
-  for b in range(num_batches):
-    for i in range(batch_size):
-      cols[i].image(res[b].get_frame_at(i).get_data(), use_column_width=True)'''
+#   for b in range(num_batches):
+#     for i in range(batch_size):
+#       cols[i].image(res[b].get_frame_at(i).get_data(), use_column_width=True)
 
 res, dataset = get_dataset_subset('wimbledon_2019_womens_final_halep_williams__fduc5bZx3ss',
-    ['fast','player_back'],4, 25, False)
+    ['fast', 'player_back'],50, 10, False)
 
 assertions = [{'keypoints': ['right_elbow','right_shoulder','right_wrist', 'right_shoulder'], 'type': 'spatial', 'attributes': ['above', 'above']}, \
-              {'keypoints': ['left_elbow','right_elbow','left_wrist','right_wrist'], 'type': 'spatial', 'attributes': [('smaller', 0.1),('smaller', 0.1)]}, \
-              {'keypoints': ['right_wrist'], 'type': 'temporal', 'attributes': [0.2]}]
+              {'keypoints': ['left_shoulder','right_shoulder','left_knee', 'right_knee', 'left_hip', 'right_hip'], 'type': 'spatial', 'attributes': ['left', 'left', 'left']}, \
+              {'keypoints': ['left_shoulder','right_shoulder','left_knee', 'right_knee', 'left_hip', 'right_hip'], 'type': 'spatial', 'attributes': ['right', 'right', 'right']}, \
+              {'keypoints': ['left_elbow','right_elbow','left_wrist','right_wrist'], 'type': 'spatial', 'attributes': [('smaller', 0.05),('smaller', 0.15)]}, \
+              {'keypoints': ['left_ankle','right_ankle','left_knee','right_knee'], 'type': 'spatial', 'attributes': [('smaller', 0.05),('smaller', 0.15)]}, \
+              {'keypoints': ['head_top','head_bottom'], 'type': 'spatial', 'attributes': [('smaller', 0.25)]}, \
+              {'keypoints': ['right_wrist'], 'type': 'temporal', 'attributes': [0.3]},
+              {'keypoints': ['left_wrist'], 'type': 'temporal', 'attributes': [0.3]}]
 
 errors, frames = check_assertions(dataset, res, assertions, True)
 

@@ -161,50 +161,59 @@ class AssertionChecker:
         for kp in kps:
           keypoint_positions.append(k[kp].position())
 
+        bbox_height = p.get_bbox()[-1]
+
         # Relative position between keypoints
         if PositionCondition.exists(atts[0]) and len(kps) == len(atts) * 2 and len(kps) % 2 == 0:
+          last_true = -1
 
-          cond_results = [True] * len(atts)
           for j, c in enumerate(atts):
             cd = PositionCondition.from_name(c)
+            x_diff = keypoint_positions[j*2][0] - keypoint_positions[j*2+1][0]
+            y_diff = keypoint_positions[j*2][1] - keypoint_positions[j*2+1][1]
+            margin = 0.001*bbox_height
+
             if cd is PositionCondition.ABOVE:
-              if keypoint_positions[j*2][1] > keypoint_positions[j*2+1][1]:
-                cond_results[j] = False
+              if y_diff < -margin:
+                if (j - last_true) == 1: last_true = j
+              elif abs(y_diff) < margin: last_true = len(atts)
               
             elif cd is PositionCondition.BELOW:
-              if keypoint_positions[j*2][1] < keypoint_positions[j*2+1][1]:
-                cond_results[j] = False
+              if y_diff > margin:
+                if (j - last_true) == 1: last_true = j
+              elif abs(y_diff) < margin: last_true = len(atts)
 
             elif cd is PositionCondition.LEFT:
-              if keypoint_positions[j*2][0] > keypoint_positions[j*2+1][0]:
-                cond_results[j] = False
+              if x_diff < -margin:
+                if (j - last_true) == 1: last_true = j
+              elif abs(x_diff) < margin: last_true = len(atts)
 
             elif cd is PositionCondition.RIGHT:
-              if keypoint_positions[j*2][0] < keypoint_positions[j*2+1][0]:
-                cond_results[j] = False
+              if x_diff > margin:
+                if (j - last_true) == 1: last_true = j
+              elif abs(x_diff) < margin: last_true = len(atts)
             else:
               raise RuntimeError('Incorrect condition: ' + c + ' for assertion: ' + asst.name())
-          if cond_results[0] and sum(cond_results) not in [0, len(atts)] or len(atts) == 1 and sum(cond_results) == 0:
+
+          if last_true == len(atts) - 2:
             errors.append(LabellingError(asst, p, ii))
 
         # Relative distance between keypoints wrt the height of the bounding box
         elif len(atts[0]) == 2 and SizeCondition.exists(atts[0][0]) and len(kps) == len(atts) * 2 and len(kps) % 2 == 0:
-          bbox_height = p.get_bbox()[-1]
-          cond_results = [True] * len(atts)
+          last_true = -1
 
           for j, c in enumerate(atts):
             cd = SizeCondition.from_name(c[0])
-            
             if cd is SizeCondition.BIGGER and type(c[1]) in [int, float]:
-              if abs(distance.cdist([keypoint_positions[2*j]], [keypoint_positions[2*j+1]], 'euclidean')[0][0]) < c[1]*bbox_height:
-                cond_results[j] = False
-            elif cd is SizeCondition.SMALLER and type(c[1]) in [int, float]:
               if abs(distance.cdist([keypoint_positions[2*j]], [keypoint_positions[2*j+1]], 'euclidean')[0][0]) > c[1]*bbox_height:
-                cond_results[j] = False
+                if (j - last_true) == 1: last_true = j
+            elif cd is SizeCondition.SMALLER and type(c[1]) in [int, float]:
+              if abs(distance.cdist([keypoint_positions[2*j]], [keypoint_positions[2*j+1]], 'euclidean')[0][0]) < c[1]*bbox_height:
+                if (j - last_true) == 1: last_true = j
             else:
               raise RuntimeError('Incorrect condition: ' + str(c) + ' for assertion: ' + asst.name())
 
-          if cond_results[0] and sum(cond_results) not in [0, len(atts)] or len(atts) == 1 and sum(cond_results) == 0:
+          if last_true == len(atts) - 2:
             errors.append(LabellingError(asst, p, ii))
           
         else:
