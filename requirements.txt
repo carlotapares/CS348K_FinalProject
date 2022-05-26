@@ -4,7 +4,3 @@ opencv-python
 streamlit
 pyngrok==4.1.1
 pandas
-tornado==6.1.0
-ipython==8.0.1
-ipykernel==5.3.0
-prompt-toolkit==2.0.1
