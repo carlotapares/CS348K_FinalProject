@@ -179,8 +179,8 @@ class ConditionChecker:
 
 class Predicate:
   def __init__(self, filename: str, conditions: 'list[Condition]', num_batches: int, batch_size: int, include_display=False) -> None:
-    self.filename_ = filename
-    self.path_ = '/'.join(filename.split('/')[:-1])
+    self.path_ = '/'.join(filename.split('/')[:-1]) + '/'
+    self.filename_ = filename.split('/')[-1]
     self.conditions_ = conditions
     self.num_batches_ = num_batches
     self.batch_size_ = batch_size
@@ -195,7 +195,7 @@ class Predicate:
     return self.dataset_
   
   def run(self) -> 'list[Batch]':
-    self.dataset_ = load_poses(self.filename_ + '.pose.json')
+    self.dataset_ = load_poses(self.path_ + self.filename_ + '.pose.json')
     out = []
     lb = 0
 
