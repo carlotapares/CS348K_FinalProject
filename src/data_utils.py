@@ -94,10 +94,6 @@ class Prediction:
   def set_relative_frame_number(self, frame_number: int) -> None:
     self.relative_frame_number_ = frame_number
 
-  
-def load_poses(path: str) -> dict:
-  return json.load(open(path, 'r'))
-
 def get_player_list_position(file: dict, frame: int, player: str) -> int:
   if len(file['person'][frame][1]) != 2:
     return -1

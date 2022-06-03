@@ -6,11 +6,11 @@ from scipy.spatial import distance
 import streamlit as st
 import pandas as pd
 
-from data_utils import Prediction, load_poses, get_prediction
+from data_utils import Prediction, get_prediction
 from assertions import Assertion, AssertionChecker, AssertionFunction
 from viz import get_image_data, get_prediction_vis, get_image_data_from_video
 
-MIN_PIXEL_DIST_FAST_SPEED = 10 # 10 px displacement per frame
+MIN_DIST_FAST_SPEED = 0.08 # 8% of the bbox height displacement per frame
 
 class Frame:
   def __init__(self, data: io.BytesIO, width: int, height: int, prediction: Prediction) -> None:
@@ -88,9 +88,10 @@ class Condition(Enum):
       if item.value[0] == name: return item
 
 class ConditionChecker:
-  def __init__(self) -> None:
+  def __init__(self, dataset) -> None:
     self.condition_ = None
     self.predictions_ = None
+    self.dataset_ = dataset
 
   def set_condition(self, condition: Condition) -> None:
     self.condition_ = condition
@@ -116,86 +117,84 @@ class ConditionChecker:
 
 
   def __check_direction_right(self):
-    prev_pos = self.predictions_[0].get_bbox()
+    out = []
+    for pred in self.predictions_:
+      prev = get_prediction(self.dataset_, pred.get_relative_frame_number() - 1, pred.get_player())
+      next = get_prediction(self.dataset_, pred.get_relative_frame_number() + 1, pred.get_player())
 
-    for i in range(1, len(self.predictions_)):
-      next_pos = self.predictions_[i].get_bbox()
+      if prev.get_bbox()[0] < pred.get_bbox()[0] and pred.get_bbox()[0] < next.get_bbox()[0]:
+        out.append(pred)
 
-      if prev_pos[0] > next_pos[0]:
-        return False 
-
-      prev_pos = next_pos
+    return out
 
   def __check_direction_left(self):
-    prev_pos = self.predictions_[0].get_bbox()
+    out = []
+    for pred in self.predictions_:
+      prev = get_prediction(self.dataset_, pred.get_relative_frame_number() - 1, pred.get_player())
+      next = get_prediction(self.dataset_, pred.get_relative_frame_number() + 1, pred.get_player())
 
-    for i in range(1, len(self.predictions_)):
-      next_pos = self.predictions_[i].get_bbox()
+      if prev.get_bbox()[0] > pred.get_bbox()[0] and pred.get_bbox()[0] > next.get_bbox()[0]:
+        out.append(pred)
 
-      if prev_pos[0] < next_pos[0]:
-        return False 
-
-      prev_pos = next_pos
+    return out
 
   def __check_speed_fast(self):
-    prev_pos = self.predictions_[0].get_bbox()
-    dist = 0
+    out = []
+    for pred in self.predictions_:
+      pred_bbox = pred.get_bbox()
+      prev = get_prediction(self.dataset_, pred.get_relative_frame_number() - 1, pred.get_player()).get_bbox()
+      next = get_prediction(self.dataset_, pred.get_relative_frame_number() + 1, pred.get_player()).get_bbox()
 
-    for i in range(1, len(self.predictions_)):
-      next_pos = self.predictions_[i].get_bbox()
-      mid_prev = [[prev_pos[0] + prev_pos[2]//2, prev_pos[1] + prev_pos[3]//2]]
-      mid_next = [[next_pos[0] + next_pos[2]//2, next_pos[1] + next_pos[3]//2]]
-      dist += distance.cdist(mid_prev, mid_next, 'euclidean')[0][0]
+      dist1 = abs(distance.cdist([[pred_bbox[0] + pred_bbox[2]//2, pred_bbox[1] + pred_bbox[3]//2]], [[prev[0] + prev[2]//2, prev[1] + prev[3]//2]], 'euclidean')[0][0])
+      dist3 = abs(distance.cdist([[pred_bbox[0] + pred_bbox[2]//2, pred_bbox[1] + pred_bbox[3]//2]], [[next[0] + next[2]//2, next[1] + next[3]//2]], 'euclidean')[0][0])
+      
+      if dist1 > MIN_DIST_FAST_SPEED * pred_bbox[3] and dist3 > MIN_DIST_FAST_SPEED * pred_bbox[3]:
+        out.append(pred)
 
-    dist /= len(self.predictions_)
-
-    if dist >= MIN_PIXEL_DIST_FAST_SPEED:
-      return True
-
-    return False
+    return out
 
   def __check_speed_slow(self):
-    prev_pos = self.predictions_[0].get_bbox()
-    dist = 0
+    out = []
+    for pred in self.predictions_:
+      pred_bbox = pred.get_bbox()
+      prev = get_prediction(self.dataset_, pred.get_relative_frame_number() - 1, pred.get_player()).get_bbox()
+      next = get_prediction(self.dataset_, pred.get_relative_frame_number() + 1, pred.get_player()).get_bbox()
 
-    for i in range(1, len(self.predictions_)):
-      next_pos = self.predictions_[i].get_bbox()
-      mid_prev = [[prev_pos[0] + prev_pos[2]//2, prev_pos[1] + prev_pos[3]//2]]
-      mid_next = [[next_pos[0] + next_pos[2]//2, next_pos[1] + next_pos[3]//2]]
-      dist += distance.cdist(mid_prev, mid_next, 'euclidean')[0][0]
-
-    dist /= len(self.predictions_)
-
-    if dist < MIN_PIXEL_DIST_FAST_SPEED:
-      return True
+      dist1 = abs(distance.cdist([[pred_bbox[0] + pred_bbox[2]//2, pred_bbox[1] + pred_bbox[3]//2]], [[prev[0] + prev[2]//2, prev[1] + prev[3]//2]], 'euclidean')[0][0])
+      dist3 = abs(distance.cdist([[pred_bbox[0] + pred_bbox[2]//2, pred_bbox[1] + pred_bbox[3]//2]], [[next[0] + next[2]//2, next[1] + next[3]//2]], 'euclidean')[0][0])
       
-    return False
+      if dist1 < MIN_DIST_FAST_SPEED * pred_bbox[3] and dist3 < MIN_DIST_FAST_SPEED * pred_bbox[3]:
+        out.append(pred)
+
+    return out
 
   def __check_player_back(self):
-    return self.predictions_[0].get_player() == 'back'
+    out = []
+    for pred in self.predictions_:
+      if pred.get_player() == 'back':
+        out.append(pred)
+    return out
 
   def __check_player_front(self):
-    return self.predictions_[0].get_player() == 'front'
+    out = []
+    for pred in self.predictions_:
+      if pred.get_player() == 'front':
+        out.append(pred)
+    return out
 
 class Predicate:
-  def __init__(self, filename: str, conditions: 'list[Condition]', num_batches: int, batch_size: int, include_display=False) -> None:
+  def __init__(self, dataset: dict, filename: str, conditions: 'list[Condition]', num_batches: int, batch_size: int, include_display=False) -> None:
     self.path_ = '/'.join(filename.split('/')[:-1]) + '/'
     self.filename_ = filename.split('/')[-1]
     self.conditions_ = conditions
     self.num_batches_ = num_batches
     self.batch_size_ = batch_size
-    self.dataset_ = None
+    self.dataset_ = dataset
     self.time_between_batches_ = 3
     self.FPS_ = 25
     self.include_display_ = include_display
-
-  def get_dataset(self) -> dict:
-    if not self.dataset_:
-      raise RuntimeError('Returning an empty dataset')
-    return self.dataset_
   
   def run(self) -> 'list[Batch]':
-    self.dataset_ = load_poses(self.path_ + self.filename_ + '.pose.json')
     out = []
     lb = 0
 
@@ -218,19 +217,17 @@ class Predicate:
         pp = get_prediction(self.dataset_, f, "back")
         if pp:
           frames_back.append(pp)
-
       if frames_front:
-        cond_checker_front = ConditionChecker()
+        cond_checker_front = ConditionChecker(self.dataset_)
         cond_checker_front.set_predictions(frames_front)
 
         for condition in self.conditions_:
           cond_checker_front.set_condition(condition)
-          res = cond_checker_front.check()
-          if res == False:
-            frames_front = None
+          frames_front = cond_checker_front.check()
+          cond_checker_front.set_predictions(frames_front)
+          if frames_front is None:
             break
 
-        
         # If frames passed conditions
         if frames_front and len(out) < self.num_batches_:
           batch = Batch()
@@ -247,16 +244,16 @@ class Predicate:
         
 
       if frames_back and len(out) < self.num_batches_:
-        cond_checker_back = ConditionChecker()
+        cond_checker_back = ConditionChecker(self.dataset_)
         cond_checker_back.set_predictions(frames_back)
-
+        
         for condition in self.conditions_:
           cond_checker_back.set_condition(condition)
-          res = cond_checker_back.check()
-          if res == False:
-            frames_back = None
+          frames_back = cond_checker_back.check()
+          cond_checker_back.set_predictions(frames_back)
+          if frames_back is None:
             break
-      
+
         # If frames passed conditions
         if frames_back:
           batch = Batch()
@@ -273,7 +270,7 @@ class Predicate:
 
     return out
 
-def get_dataset_subset(filename: str, tags: 'list[str]', num_batches: int, batch_size: int, include_display=False) -> tuple(['list[Batch]', dict]):
+def get_dataset_subset(dataset_json: dict, filename: str, tags: 'list[str]', num_batches: int, batch_size: int, include_display=False) -> tuple(['list[Batch]', dict]):
   conditions = []
 
   for tag in tags:
@@ -285,12 +282,12 @@ def get_dataset_subset(filename: str, tags: 'list[str]', num_batches: int, batch
     else:
       raise RuntimeError('Tag ' + tag + ' is not supported')
 
-  p = Predicate(filename, conditions, num_batches, batch_size, include_display)
+  p = Predicate(dataset_json, filename, conditions, num_batches, batch_size, include_display)
   result = p.run()
-  return result, p.get_dataset()
+  return result
 
-def check_assertions(path: str, dataset: dict, input: 'list[Batch]', assertions = 'list[dict]', include_display=False) -> tuple([pd.DataFrame, 'list[Frame]']):
-  a = AssertionChecker(dataset)
+def check_assertions(path: str, dataset_json: dict, input: 'list[Batch]', assertions = 'list[dict]', include_display=False) -> tuple([pd.DataFrame, 'list[Frame]']):
+  a = AssertionChecker(dataset_json)
   for asst in assertions:
     a.register_assertion(Assertion(AssertionFunction(asst['keypoints'], asst['type'], asst['attributes'])))
 

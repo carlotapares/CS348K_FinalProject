@@ -1,19 +1,20 @@
-from flask import Flask, render_template, request, redirect, url_for
+from flask import Flask, render_template, request
 from flask_cors import CORS
 import numpy as np
 import json
+import sys
+from src.data_utils import get_prediction, PoseTrack_Keypoint_Pairs
+sys.path.append('./')
+sys.path.append('../dataset/')
+from ui_utils import get_dataset_subset, check_assertions
+from matplotlib import colors
 
-#from ui_utils import Condition, get_dataset_subset, check_assertions
+DATASET_PATH = '../dataset/'
+
+dataset_json = json.load(open(DATASET_PATH + 'wimbledon_2019_womens_final_halep_williams__fduc5bZx3ss.pose.json', 'r'))
 
 app = Flask(__name__,static_folder='static',template_folder='templates')
 CORS(app)
-
-images = ["test1.jpeg", "test2.jpeg", "test3.jpeg"]
-keypoints = np.random.randint(0,100,10).tolist()
-bbox = [200,200,200,200]
-data_ = {"images": [images,images,images,images],
-        "keypoints":[keypoints,keypoints,keypoints,keypoints],
-        "bbox":[bbox,bbox,bbox,bbox]}
 
 @app.route('/')
 def index():
@@ -23,83 +24,53 @@ def index():
 def search():
   content = request.get_json(silent=True)
   print(content)
+  res = get_dataset_subset(dataset_json, DATASET_PATH + 'wimbledon_2019_womens_final_halep_williams__fduc5bZx3ss',
+          content['checkbox'],int(content['batches']),int(content['frames']), False)
+
+  frames_ = []
+  keypoints_ = []
+  bbox_ = []
+
+  for b in range(len(res)):
+    for f in range(res[b].length()):
+      frame_num = res[b].get_frame_at(f).get_prediction().get_real_frame_number()
+      keypoints = res[b].get_frame_at(f).get_prediction().get_keypoints()
+      bbox = res[b].get_frame_at(f).get_prediction().get_bbox()
+      player = res[b].get_frame_at(f).get_prediction().get_player()
+
+      frame_num_rel = res[b].get_frame_at(f).get_prediction().get_relative_frame_number()
+
+      pred_1 = get_prediction(dataset_json, frame_num_rel - 1, player)
+      keypoints_1 = pred_1.get_keypoints()
+      bbox_1 = pred_1.get_bbox()
+      prev = pred_1.get_real_frame_number()
+
+      pred_3 = get_prediction(dataset_json, frame_num_rel + 1, player)
+      keypoints_3 = pred_3.get_keypoints()
+      bbox_3 = pred_3.get_bbox()
+      next = pred_3.get_real_frame_number()
+
+      frames_.append(['thumb' + str(prev+1) + '.png', 
+                      'thumb' + str(frame_num+1) + '.png', 
+                      'thumb' + str(next) + '.png'])
+      keypoints_.append([formated_keypoints(keypoints_1, bbox_1),
+                        formated_keypoints(keypoints, bbox), 
+                        formated_keypoints(keypoints_3, bbox_3)])
+      bbox_.append([bbox_1, bbox, bbox_3])
+
+  data_ = {"images": frames_, "keypoints": keypoints_, "bbox": bbox_}
   return json.dumps(data_)
 
-# def initialize_session_state():
-#  ## TODO initialize any session state needed - example below
-# #   if 'seen_image_indices_list' not in st.session_state:
-# #       st.session_state['seen_image_indices_list'] = []
-#     return
+def formated_keypoints(keypoints, bbox):
+  x,y,_,_ = list(map(int, bbox))
+  kp_plot = []
+  for joint_pair in PoseTrack_Keypoint_Pairs:
+    ind_1, ind_2, color = joint_pair
+    x1, y1 = keypoints[ind_1].position()
+    x2, y2 = keypoints[ind_2].position()
 
-# initialize_session_state()
-
-# def reset_session_state():
-#     #TODO clear any session state on reset
-#     return
-
-# # 2 TABS layout
-# st.markdown(
-#     '<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.5.3/dist/css/bootstrap.min.css" integrity="sha384-TX8t27EcRE3e/ihU7zmQxVncDAy5uIKz4rEkgIXeMed4M0jlfIDPvg6uqKI2xXr2" crossorigin="anonymous">',
-#     unsafe_allow_html=True,
-# )
-# query_params = st.experimental_get_query_params()
-# tabs = ["Explore Dataset", "Detect Errors Using Assertions"]
-# if "tab" in query_params:
-#     active_tab = query_params["tab"][0]
-# else:
-#     active_tab = "Explore Dataset"
-
-# if active_tab not in tabs:
-#     st.experimental_set_query_params(tab="Explore Dataset")
-#     active_tab = "Explore Dataset"
-
-# li_items = "".join(
-#     f"""
-#     <li class="nav-item">
-#         <a class="nav-link{' active' if t==active_tab else ''}" target="_self" rel="noopener noreferrer" href="/?tab={t}">{t}</a>
-#     </li>
-#     """
-#     for t in tabs
-# )
-# tabs_html = f"""
-#     <ul class="nav nav-tabs">
-#     {li_items}
-#     </ul>
-# """
-# st.markdown(tabs_html, unsafe_allow_html=True)
-# st.markdown("<br><br>", unsafe_allow_html=True)
-
-# # Helper for displaying results underneath tabs
-
-# if 'get_subset' not in st.session_state:
-#     st.session_state['get_subset'] = '--'
-    
-# if 'find_errors' not in st.session_state:
-#     st.session_state['find_errors'] = '--'
-
-# def find_errors():
-#   st.session_state.find_errors = ''
-
-# def get_subset():
-#   st.session_state.get_subset = ''
-
-# # Content under Explore Dataset tab
-# if active_tab == "Explore Dataset":
-#   with st.sidebar:
-#     # mutliselect for 
-#     query_condition_list = st.multiselect('Search Filters', [c.name for c in Condition])
-#     num_batches = st.number_input('Number of batches', min_value=1, max_value=7, value=5)
-#     batch_size = st.number_input('Number of frames per batch', min_value=1, max_value=7, value=5)
-#     search_button = st.button("Search", on_click=get_subset)
-
-# # Content under asstertions tab
-# elif active_tab == "Detect Errors Using Assertions":
-#   with st.sidebar:
-#     num_batches = st.number_input('Number of assertions', min_value=1, max_value=10, value=1)
-#     search_button = st.button("Find errors", on_click=find_errors)
-
-# else:
-#     st.error("Something has gone terribly wrong.")
+    kp_plot.append((int(x1-x), int(y1-y), int(x2-x), int(y2-y), np.round(colors.to_rgba(color),2).tolist()))
+  return kp_plot
 
 # # Check if search button has been clicked
 # if st.session_state.get_subset != '--':

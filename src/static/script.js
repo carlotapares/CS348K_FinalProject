@@ -2,7 +2,7 @@ function addImage(canvasId, path, keypoints, bbox){
   var canvas = document.getElementById(canvasId);
 
   canvas.style["display"] = "inline";
-  canvas.style["background"] = `url(static/${path})`;
+  canvas.style["background"] = `url(static/images/${path})`;
   canvas.style["background-position"] = "-" + bbox[0].toString() + "px -" + bbox[1].toString() + "px";
   canvas.style["width"] = bbox[2].toString() + 'px';
   canvas.style["height"] = bbox[3].toString() + 'px';
@@ -62,9 +62,9 @@ function loadData(images, keypoints, bbox){
     addFrameGroup("frame" + i.toString(), images[i],keypoints[i]);
   }
   for (let i = 0; i < images.length; i++) {
-    addImage("frame" + i.toString() + "1", images[i][0], keypoints[i][0], bbox[i]);
-    addImage("frame" + i.toString() + "2", images[i][1], keypoints[i][1], bbox[i]);
-    addImage("frame" + i.toString() + "3", images[i][2], keypoints[i][2], bbox[i]);
+    addImage("frame" + i.toString() + "1", images[i][0], keypoints[i][0], bbox[i][0]);
+    addImage("frame" + i.toString() + "2", images[i][1], keypoints[i][1], bbox[i][1]);
+    addImage("frame" + i.toString() + "3", images[i][2], keypoints[i][2], bbox[i][2]);
   }
 }
 
