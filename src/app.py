@@ -23,7 +23,6 @@ def index():
 @app.route('/search', methods = ['POST'])
 def search():
   content = request.get_json(silent=True)
-  print(content)
   res = get_dataset_subset(dataset_json, DATASET_PATH + 'wimbledon_2019_womens_final_halep_williams__fduc5bZx3ss',
           content['checkbox'],int(content['batches']),int(content['frames']), False)
 
@@ -57,7 +56,6 @@ def search():
       bbox_.append([bbox_1, bbox, bbox_3])
 
   data_ = {"images": frames_, "keypoints": keypoints_, "bbox": bbox_}
-  #print(data_)
   return json.dumps(data_)
 
 def formated_keypoints(keypoints, bbox):

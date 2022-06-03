@@ -1,22 +1,33 @@
 function addImage(canvasId, path, keypoints, bbox){
   var canvas = document.getElementById(canvasId);
-
-  canvas.style["display"] = "inline";
-  canvas.style["background"] = `url(static/images/test1.jpeg)`;
-  canvas.style["background-position"] = "-" + bbox[0].toString() + "px -" + bbox[1].toString() + "px";
-  canvas.style["width"] = bbox[2].toString() + 'px';
-  canvas.style["height"] = bbox[3].toString() + 'px';
-  canvas.style["background-repeat"] = 'no-repeat';
-
   var ctx = canvas.getContext("2d");
 
-  ctx.moveTo(0, 0);
-  ctx.lineTo(200, 100);
-  ctx.stroke();
+  canvas.setAttribute("width", 200);
+  canvas.setAttribute("height",300);
 
-  ctx.moveTo(100, 0);
-  ctx.lineTo(200, 100);
-  ctx.stroke();
+  canvas.style["display"] = "inline";
+  const image = new Image();
+  image.src = "./static/images/test1.png";
+  image.style.width = 'auto';
+  image.style.height = '300px';
+  image.addEventListener('load', render);
+
+  function render() {
+    const newx = (200 - bbox[2])/2;
+    const newy = (300 - bbox[3])/2;
+
+    ctx.drawImage(image,bbox[0]-newx,bbox[1]-newy,canvas.width,canvas.height,0,0,canvas.width,canvas.height);
+
+    for (let i = 0; i < keypoints.length; i++){
+      if (i > 0) ctx.beginPath();
+      k = keypoints[i];
+      ctx.moveTo(k[0]+newx, k[1]+newy);
+      ctx.lineTo(k[2]+newx, k[3]+newy);
+      ctx.lineWidth = 2;
+      ctx.strokeStyle = `rgb(${Math.floor(255 * k[4][0])},${Math.floor(255 * k[4][1])},${Math.floor(255 * k[4][2])})`
+      ctx.stroke();
+    }
+  }
 }
 
 function addFrameGroup(frame_id, path, keypoints){

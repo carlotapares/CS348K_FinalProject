@@ -201,7 +201,6 @@ class Predicate:
       start = self.time_between_batches_* self.FPS_ * lb
       end = start + self.batch_size_
       batch_frames = np.arange(start, end, dtype=int)
-      print(batch_frames)
       if start > len(self.dataset_['person']) -1 or end > len(self.dataset_['person']) -1:
         raise('Could not find the number of frames selected. Check batches and batch size.')
      
@@ -267,7 +266,6 @@ class Predicate:
             batch.add_frame(frame)
           out.append(batch)
       prev_len = len(out)
-    print(len(out))
     return out
 
 def get_dataset_subset(dataset_json: dict, filename: str, tags: 'list[str]', num_batches: int, batch_size: int, include_display=False) -> tuple(['list[Batch]', dict]):
