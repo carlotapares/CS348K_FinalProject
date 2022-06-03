@@ -3,3 +3,8 @@ original_data
 src/.ipynb_checkpoints
 src/__pycache__
 .vscode
+src/static/dataset
+eval.ipynb
+embeddings.pkl
+src/old
+
