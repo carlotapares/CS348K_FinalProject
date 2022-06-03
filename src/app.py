@@ -3,9 +3,9 @@ from flask_cors import CORS
 import numpy as np
 import json
 import sys
-from src.data_utils import get_prediction, PoseTrack_Keypoint_Pairs
 sys.path.append('./')
 sys.path.append('./static/dataset/')
+from data_utils import get_prediction, PoseTrack_Keypoint_Pairs
 from ui_utils import get_dataset_subset, check_assertions
 from matplotlib import colors
 
@@ -40,25 +40,24 @@ def search():
 
       frame_num_rel = res[b].get_frame_at(f).get_prediction().get_relative_frame_number()
 
-      pred_1 = get_prediction(dataset_json, frame_num_rel - 1, player)
+      pred_1 = get_prediction(dataset_json, max(0,frame_num_rel - 1), player)
       keypoints_1 = pred_1.get_keypoints()
       bbox_1 = pred_1.get_bbox()
       prev = pred_1.get_real_frame_number()
 
-      pred_3 = get_prediction(dataset_json, frame_num_rel + 1, player)
+      pred_3 = get_prediction(dataset_json, min(len(dataset_json['person'])-1,frame_num_rel + 1), player)
       keypoints_3 = pred_3.get_keypoints()
       bbox_3 = pred_3.get_bbox()
       next = pred_3.get_real_frame_number()
 
-      frames_.append(['thumb' + str(prev+1) + '.png', 
-                      'thumb' + str(frame_num+1) + '.png', 
-                      'thumb' + str(next) + '.png'])
+      frames_.append([prev+1, frame_num+1, next + 1])
       keypoints_.append([formated_keypoints(keypoints_1, bbox_1),
                         formated_keypoints(keypoints, bbox), 
                         formated_keypoints(keypoints_3, bbox_3)])
       bbox_.append([bbox_1, bbox, bbox_3])
 
   data_ = {"images": frames_, "keypoints": keypoints_, "bbox": bbox_}
+  #print(data_)
   return json.dumps(data_)
 
 def formated_keypoints(keypoints, bbox):
@@ -72,40 +71,16 @@ def formated_keypoints(keypoints, bbox):
     kp_plot.append((int(x1-x), int(y1-y), int(x2-x), int(y2-y), np.round(colors.to_rgba(color),2).tolist()))
   return kp_plot
 
-# # Check if search button has been clicked
-# if st.session_state.get_subset != '--':
-#   if (query_condition_list):
-#     ## LAYOUT - 2 cols
-#     cols = st.columns(batch_size)
+# res = get_dataset_subset(dataset_json, DATASET_PATH + 'wimbledon_2019_womens_final_halep_williams__fduc5bZx3ss',
+#     [],300, 70, False)
 
-#     # Get data
-#     res, _ = get_dataset_subset(DATASET_PATH + 'wimbledon_2019_womens_final_halep_williams__fduc5bZx3ss',
-#       query_condition_list,num_batches,batch_size, True)
-    
-#     # Plot data
-#     for b in range(num_batches):
-#       for i in range(batch_size):
-#         cols[i].image(res[b].get_frame_at(i).get_data(), use_column_width=True)
+# assertions = [{'keypoints': ['right_elbow','right_shoulder','right_wrist', 'right_shoulder'], 'type': 'spatial', 'attributes': ['above', 'above']}, \
+#             {'keypoints': ['left_shoulder','right_shoulder','left_knee', 'right_knee', 'left_hip', 'right_hip'], 'type': 'spatial', 'attributes': ['left', 'left', 'left']}, \
+#             {'keypoints': ['left_shoulder','right_shoulder','left_knee', 'right_knee', 'left_hip', 'right_hip'], 'type': 'spatial', 'attributes': ['right', 'right', 'right']}, \
+#             {'keypoints': ['left_elbow','right_elbow','left_wrist','right_wrist'], 'type': 'spatial', 'attributes': [('smaller', 0.05),('smaller', 0.15)]}, \
+#             {'keypoints': ['left_ankle','right_ankle','left_knee','right_knee'], 'type': 'spatial', 'attributes': [('smaller', 0.05),('smaller', 0.15)]}, \
+#             {'keypoints': ['head_top','head_bottom'], 'type': 'spatial', 'attributes': [('smaller', 0.25)]}, \
+#             {'keypoints': ['right_wrist'], 'type': 'temporal', 'attributes': [0.3]},
+#             {'keypoints': ['left_wrist'], 'type': 'temporal', 'attributes': [0.3]}]
 
-
-# # Check if find errors button has been clicked
-# if st.session_state.find_errors != '--':
-#   res, dataset = get_dataset_subset(DATASET_PATH + 'wimbledon_2019_womens_final_halep_williams__fduc5bZx3ss',
-#     ['fast', 'player_back'],5, 10, False)
-
-#   assertions = [{'keypoints': ['right_elbow','right_shoulder','right_wrist', 'right_shoulder'], 'type': 'spatial', 'attributes': ['above', 'above']}, \
-#               {'keypoints': ['left_shoulder','right_shoulder','left_knee', 'right_knee', 'left_hip', 'right_hip'], 'type': 'spatial', 'attributes': ['left', 'left', 'left']}, \
-#               {'keypoints': ['left_shoulder','right_shoulder','left_knee', 'right_knee', 'left_hip', 'right_hip'], 'type': 'spatial', 'attributes': ['right', 'right', 'right']}, \
-#               {'keypoints': ['left_elbow','right_elbow','left_wrist','right_wrist'], 'type': 'spatial', 'attributes': [('smaller', 0.05),('smaller', 0.15)]}, \
-#               {'keypoints': ['left_ankle','right_ankle','left_knee','right_knee'], 'type': 'spatial', 'attributes': [('smaller', 0.05),('smaller', 0.15)]}, \
-#               {'keypoints': ['head_top','head_bottom'], 'type': 'spatial', 'attributes': [('smaller', 0.25)]}, \
-#               {'keypoints': ['right_wrist'], 'type': 'temporal', 'attributes': [0.3]},
-#               {'keypoints': ['left_wrist'], 'type': 'temporal', 'attributes': [0.3]}]
-
-#   errors, frames = check_assertions(DATASET_PATH + 'wimbledon_2019_womens_final_halep_williams__fduc5bZx3ss', dataset, res, assertions, True)
-
-#   if errors is not None:
-#     st.dataframe(errors)
-#     if frames is not None:
-#       for f in frames:
-#         st.image(f.get_data())
+# errors, frames = check_assertions(DATASET_PATH + 'wimbledon_2019_womens_final_halep_williams__fduc5bZx3ss', dataset_json, res, assertions, False)

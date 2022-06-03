@@ -2,7 +2,7 @@ function addImage(canvasId, path, keypoints, bbox){
   var canvas = document.getElementById(canvasId);
 
   canvas.style["display"] = "inline";
-  canvas.style["background"] = `url(static/dataset/frames/${path})`;
+  canvas.style["background"] = `url(static/images/test1.jpeg)`;
   canvas.style["background-position"] = "-" + bbox[0].toString() + "px -" + bbox[1].toString() + "px";
   canvas.style["width"] = bbox[2].toString() + 'px';
   canvas.style["height"] = bbox[3].toString() + 'px';
@@ -58,6 +58,7 @@ function addFrameGroup(frame_id, path, keypoints){
 }
 
 function loadData(images, keypoints, bbox){
+  document.getElementById('imageArea').innerHTML = "";
   for (let i = 0; i < images.length; i++) {
     addFrameGroup("frame" + i.toString(), images[i],keypoints[i]);
   }

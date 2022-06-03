@@ -195,11 +195,13 @@ class Predicate:
   def run(self) -> 'list[Batch]':
     out = []
     lb = 0
+    prev_len = 0
 
     while len(out) < self.num_batches_:
       start = self.time_between_batches_* self.FPS_ * lb
       end = start + self.batch_size_
       batch_frames = np.arange(start, end, dtype=int)
+      print(batch_frames)
       if start > len(self.dataset_['person']) -1 or end > len(self.dataset_['person']) -1:
         raise('Could not find the number of frames selected. Check batches and batch size.')
      
@@ -240,8 +242,7 @@ class Predicate:
             batch.add_frame(frame)
           out.append(batch)
         
-
-      if frames_back and len(out) < self.num_batches_:
+      if frames_back and len(out) < self.num_batches_ and len(out) == prev_len:
         cond_checker_back = ConditionChecker(self.dataset_)
         cond_checker_back.set_predictions(frames_back)
         
@@ -265,7 +266,8 @@ class Predicate:
               frame = Frame(None, -1, -1, f)
             batch.add_frame(frame)
           out.append(batch)
-
+      prev_len = len(out)
+    print(len(out))
     return out
 
 def get_dataset_subset(dataset_json: dict, filename: str, tags: 'list[str]', num_batches: int, batch_size: int, include_display=False) -> tuple(['list[Batch]', dict]):
@@ -274,8 +276,6 @@ def get_dataset_subset(dataset_json: dict, filename: str, tags: 'list[str]', num
   for tag in tags:
     if Condition.exists(tag):
       c = Condition.from_name(tag)
-      if c.ctype == 'temporal' and batch_size <= 1:
-        raise RuntimeError('Batch size has to be bigger than 1 for temporal conditions.')
       conditions.append(c)
     else:
       raise RuntimeError('Tag ' + tag + ' is not supported')

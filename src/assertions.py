@@ -2,7 +2,6 @@ import pandas as pd
 from enum import Enum
 from scipy.spatial import distance
 import numpy as np
-
 from data_utils import Prediction, PoseTrack_COCO_Keypoint_Ordering, get_prediction
 
 class PositionCondition(Enum):
@@ -240,10 +239,11 @@ class AssertionChecker:
             if jj == 0:
               continue
             p2 = get_prediction(self.dataset_, max(0, p1.get_relative_frame_number()+jj), p1.get_player())
-            x2,y2 = p2.get_keypoints()[kps[0]].position()
-            dist.append(abs(distance.cdist([[x1,y1]], [[x2,y2]], 'euclidean')[0][0]))
+            if p2:
+              x2,y2 = p2.get_keypoints()[kps[0]].position()
+              dist.append(abs(distance.cdist([[x1,y1]], [[x2,y2]], 'euclidean')[0][0]))
 
-          if np.min(dist) > atts[0]*p1.get_bbox()[3]:
+          if len(dist) > 0 and np.min(dist) > atts[0]*p1.get_bbox()[3]:
             errors.append(LabellingError(asst, p1, ii))
 
       else:
