@@ -5,11 +5,11 @@ import json
 import sys
 from src.data_utils import get_prediction, PoseTrack_Keypoint_Pairs
 sys.path.append('./')
-sys.path.append('../dataset/')
+sys.path.append('./static/dataset/')
 from ui_utils import get_dataset_subset, check_assertions
 from matplotlib import colors
 
-DATASET_PATH = '../dataset/'
+DATASET_PATH = './static/dataset/'
 
 dataset_json = json.load(open(DATASET_PATH + 'wimbledon_2019_womens_final_halep_williams__fduc5bZx3ss.pose.json', 'r'))
 

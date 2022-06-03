@@ -2,7 +2,7 @@ function addImage(canvasId, path, keypoints, bbox){
   var canvas = document.getElementById(canvasId);
 
   canvas.style["display"] = "inline";
-  canvas.style["background"] = `url(static/images/${path})`;
+  canvas.style["background"] = `url(static/dataset/frames/${path})`;
   canvas.style["background-position"] = "-" + bbox[0].toString() + "px -" + bbox[1].toString() + "px";
   canvas.style["width"] = bbox[2].toString() + 'px';
   canvas.style["height"] = bbox[3].toString() + 'px';

@@ -1,9 +1,7 @@
 import io
 import numpy as np
 from enum import Enum
-import os
 from scipy.spatial import distance
-import streamlit as st
 import pandas as pd
 
 from data_utils import Prediction, get_prediction
