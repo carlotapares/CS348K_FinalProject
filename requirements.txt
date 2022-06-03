@@ -1,6 +1,7 @@
 matplotlib
 numpy
 opencv-python
-streamlit
 pyngrok==4.1.1
 pandas
+flask
+flask_cors
