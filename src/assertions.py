@@ -100,6 +100,7 @@ class LabellingError:
     d['frame_number'] = self.prediction_.get_real_frame_number()
     d['relative_frame_number'] = self.prediction_.get_relative_frame_number()
     d['prediction_idx'] = self.get_prediction_indx()
+    d['player'] = self.prediction_.get_player()
 
     return pd.DataFrame(d, index=[0])
 

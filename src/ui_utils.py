@@ -8,7 +8,7 @@ from data_utils import Prediction, get_prediction
 from assertions import Assertion, AssertionChecker, AssertionFunction
 from viz import get_image_data, get_prediction_vis, get_image_data_from_video
 
-MIN_DIST_FAST_SPEED = 0.08 # 8% of the bbox height displacement per frame
+MIN_DIST_FAST_SPEED = 0.05 # 5% of the bbox height displacement per frame
 
 class Frame:
   def __init__(self, data: io.BytesIO, width: int, height: int, prediction: Prediction) -> None:
@@ -277,6 +277,18 @@ def get_dataset_subset(dataset_json: dict, filename: str, tags: 'list[str]', num
       conditions.append(c)
     else:
       raise RuntimeError('Tag ' + tag + ' is not supported')
+  
+  if Condition.PLAYER_BACK in conditions and Condition.PLAYER_FRONT in conditions:
+    conditions.pop(conditions.index(Condition.PLAYER_BACK))
+    conditions.pop(conditions.index(Condition.PLAYER_FRONT))
+
+  if Condition.DIRECTION_RIGHT in conditions and Condition.DIRECTION_LEFT in conditions:
+    conditions.pop(conditions.index(Condition.DIRECTION_LEFT))
+    conditions.pop(conditions.index(Condition.DIRECTION_RIGHT))
+
+  if Condition.SPEED_SLOW in conditions and Condition.SPEED_FAST in conditions:
+    conditions.pop(conditions.index(Condition.SPEED_FAST))
+    conditions.pop(conditions.index(Condition.SPEED_SLOW))
 
   p = Predicate(dataset_json, filename, conditions, num_batches, batch_size, include_display)
   result = p.run()

@@ -26,9 +26,9 @@ def get_prediction_vis(pred: Prediction, image: np.array) -> tuple([io.BytesIO,i
   keypoints = pred.get_keypoints()
   x,y,w,h = list(map(int, pred.get_bbox()))
   
-  fig = plt.figure()
-  #plt.imshow(cv2.cvtColor(image[y:y+h,x:x+w,:], cv2.COLOR_BGR2RGB),alpha=0.6)
-  plt.imshow(image[y:y+h,x:x+w,:],alpha=0.6)
+  plt.imshow(cv2.cvtColor(image[y:y+h,x:x+w,:], cv2.COLOR_BGR2RGB),alpha=0.6)
+  fig = plt.gcf()
+  #plt.imshow(image[y:y+h,x:x+w,:],alpha=0.6)
 
   for joint_pair in PoseTrack_Keypoint_Pairs:
     ind_1, ind_2, color = joint_pair
@@ -38,9 +38,9 @@ def get_prediction_vis(pred: Prediction, image: np.array) -> tuple([io.BytesIO,i
     plt.plot([x1-x, x2-x], [y1-y, y2-y], c=color, linewidth=2)
 
   b = io.BytesIO()
-  plt.savefig(b, format='png',dpi=200)
+  plt.savefig(b, bbox_inches='tight', format='png',dpi=100)
   plt.close(fig)
 
   w, h = plt.gcf().get_size_inches()
 
-  return b, w * 200, h*200
+  return b, w * 100, h*100

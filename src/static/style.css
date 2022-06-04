@@ -28,3 +28,40 @@ body {
 .carousel-control-prev {
     filter: invert(100%);
 }
+
+.hidden_content {
+  display:none;
+  visibility:hidden;
+}
+
+.nav-link {
+  cursor: pointer !important;
+}
+
+.CodeMirror { 
+  border: 1px solid silver; 
+}
+
+.CodeMirror-empty.CodeMirror-focused { 
+  outline: none; 
+}
+
+.CodeMirror pre.CodeMirror-placeholder { 
+  color: #999; 
+}
+
+.CodeMirror-linenumbers{
+  width: 29px !important;
+  padding: 1px 8px 0 5px;
+  color: #c8d2d7;
+  font-size: 10px;
+
+}
+
+.CodeMirror-line, .CodeMirror-placeholder{
+  padding-left: 55px !important;
+}
+
+.CodeMirror-gutters {
+  left: 0px !important;
+}
