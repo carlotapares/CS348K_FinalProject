@@ -104,7 +104,7 @@ document.getElementById("imageArea").innerHTML = "";
 httpPost.onreadystatechange = function(err) {
     if (httpPost.readyState == 4 && httpPost.status == 200){
         const data = httpPost.response;
-        loadData(data['images'],data['keypoints'], data['bbox'], "imageArea");
+        loadData(data['images'],data['keypoints'], data['bbox'], data['asst_names'], "imageArea");
     } else {
         console.log(err);
     }
