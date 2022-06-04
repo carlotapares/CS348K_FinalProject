@@ -150,13 +150,3 @@ def check():
 
   data_ = {"error" : False, "images": frames_, "keypoints": keypoints_, "bbox": bbox_, "asst_names": asst_}
   return json.dumps(data_)
-
-
-# assertions = [{'keypoints': ['right_elbow','right_shoulder','right_wrist', 'right_shoulder'], 'type': 'spatial', 'attributes': ['above', 'above']}, \
-#             {'keypoints': ['left_shoulder','right_shoulder','left_knee', 'right_knee', 'left_hip', 'right_hip'], 'type': 'spatial', 'attributes': ['left', 'left', 'left']}, \
-#             {'keypoints': ['left_shoulder','right_shoulder','left_knee', 'right_knee', 'left_hip', 'right_hip'], 'type': 'spatial', 'attributes': ['right', 'right', 'right']}, \
-#             {'keypoints': ['left_elbow','right_elbow','left_wrist','right_wrist'], 'type': 'spatial', 'attributes': [('smaller', 0.05),('smaller', 0.15)]}, \
-#             {'keypoints': ['left_ankle','right_ankle','left_knee','right_knee'], 'type': 'spatial', 'attributes': [('smaller', 0.05),('smaller', 0.15)]}, \
-#             {'keypoints': ['head_top','head_bottom'], 'type': 'spatial', 'attributes': [('smaller', 0.25)]}, \
-#             {'keypoints': ['right_wrist'], 'type': 'temporal', 'attributes': [0.3]},
-#             {'keypoints': ['left_wrist'], 'type': 'temporal', 'attributes': [0.3]}]
