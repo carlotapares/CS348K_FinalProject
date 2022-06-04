@@ -120,6 +120,9 @@ class ConditionChecker:
       prev = get_prediction(self.dataset_, pred.get_relative_frame_number() - 1, pred.get_player())
       next = get_prediction(self.dataset_, pred.get_relative_frame_number() + 1, pred.get_player())
 
+      if prev == None or next == None:
+        continue
+
       if prev.get_bbox()[0] < pred.get_bbox()[0] and pred.get_bbox()[0] < next.get_bbox()[0]:
         out.append(pred)
 
@@ -131,6 +134,9 @@ class ConditionChecker:
       prev = get_prediction(self.dataset_, pred.get_relative_frame_number() - 1, pred.get_player())
       next = get_prediction(self.dataset_, pred.get_relative_frame_number() + 1, pred.get_player())
 
+      if prev == None or next == None:
+        continue
+
       if prev.get_bbox()[0] > pred.get_bbox()[0] and pred.get_bbox()[0] > next.get_bbox()[0]:
         out.append(pred)
 
@@ -140,8 +146,14 @@ class ConditionChecker:
     out = []
     for pred in self.predictions_:
       pred_bbox = pred.get_bbox()
-      prev = get_prediction(self.dataset_, pred.get_relative_frame_number() - 1, pred.get_player()).get_bbox()
-      next = get_prediction(self.dataset_, pred.get_relative_frame_number() + 1, pred.get_player()).get_bbox()
+      prev = get_prediction(self.dataset_, pred.get_relative_frame_number() - 1, pred.get_player())
+      next = get_prediction(self.dataset_, pred.get_relative_frame_number() + 1, pred.get_player())
+
+      if prev == None or next == None:
+        continue
+
+      prev = prev.get_bbox()
+      next = next.get_bbox()
 
       dist1 = abs(distance.cdist([[pred_bbox[0] + pred_bbox[2]//2, pred_bbox[1] + pred_bbox[3]//2]], [[prev[0] + prev[2]//2, prev[1] + prev[3]//2]], 'euclidean')[0][0])
       dist3 = abs(distance.cdist([[pred_bbox[0] + pred_bbox[2]//2, pred_bbox[1] + pred_bbox[3]//2]], [[next[0] + next[2]//2, next[1] + next[3]//2]], 'euclidean')[0][0])
@@ -155,8 +167,14 @@ class ConditionChecker:
     out = []
     for pred in self.predictions_:
       pred_bbox = pred.get_bbox()
-      prev = get_prediction(self.dataset_, pred.get_relative_frame_number() - 1, pred.get_player()).get_bbox()
-      next = get_prediction(self.dataset_, pred.get_relative_frame_number() + 1, pred.get_player()).get_bbox()
+      prev = get_prediction(self.dataset_, pred.get_relative_frame_number() - 1, pred.get_player())
+      next = get_prediction(self.dataset_, pred.get_relative_frame_number() + 1, pred.get_player())
+
+      if prev == None or next == None:
+        continue
+
+      prev = prev.get_bbox()
+      next = next.get_bbox()
 
       dist1 = abs(distance.cdist([[pred_bbox[0] + pred_bbox[2]//2, pred_bbox[1] + pred_bbox[3]//2]], [[prev[0] + prev[2]//2, prev[1] + prev[3]//2]], 'euclidean')[0][0])
       dist3 = abs(distance.cdist([[pred_bbox[0] + pred_bbox[2]//2, pred_bbox[1] + pred_bbox[3]//2]], [[next[0] + next[2]//2, next[1] + next[3]//2]], 'euclidean')[0][0])
@@ -185,24 +203,23 @@ class Predicate:
     self.path_ = '/'.join(filename.split('/')[:-1]) + '/'
     self.filename_ = filename.split('/')[-1]
     self.conditions_ = conditions
-    self.num_batches_ = num_batches
-    self.batch_size_ = batch_size
     self.dataset_ = dataset
     self.time_between_batches_ = 3
     self.FPS_ = 25
     self.include_display_ = include_display
+    self.num_batches_ = num_batches if num_batches != 0 else len(dataset['person'])*2
+    self.batch_size_ = batch_size if batch_size != 0 else self.time_between_batches_* self.FPS_
   
   def run(self) -> 'list[Batch]':
     out = []
     lb = 0
-    prev_len = 0
 
     while len(out) < self.num_batches_:
       start = self.time_between_batches_* self.FPS_ * lb
       end = start + self.batch_size_
       batch_frames = np.arange(start, end, dtype=int)
       if start > len(self.dataset_['person']) -1 or end > len(self.dataset_['person']) -1:
-        raise('Could not find the number of frames selected. Check batches and batch size.')
+        break
      
       lb += 1
 
@@ -241,7 +258,7 @@ class Predicate:
             batch.add_frame(frame)
           out.append(batch)
         
-      if frames_back and len(out) < self.num_batches_ and len(out) == prev_len:
+      if frames_back and len(out) < self.num_batches_:
         cond_checker_back = ConditionChecker(self.dataset_)
         cond_checker_back.set_predictions(frames_back)
         
@@ -265,7 +282,6 @@ class Predicate:
               frame = Frame(None, -1, -1, f)
             batch.add_frame(frame)
           out.append(batch)
-      prev_len = len(out)
     return out
 
 def get_dataset_subset(dataset_json: dict, filename: str, tags: 'list[str]', num_batches: int, batch_size: int, include_display=False) -> tuple(['list[Batch]', dict]):

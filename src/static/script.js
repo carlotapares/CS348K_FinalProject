@@ -1,4 +1,4 @@
-function addImage(canvasId, path, keypoints, bbox){
+function addImage(canvasId, path, keypoints, bbox, asst_name){
   var canvas = document.getElementById(canvasId);
   var ctx = canvas.getContext("2d");
 
@@ -28,7 +28,11 @@ function addImage(canvasId, path, keypoints, bbox){
       ctx.stroke();
     }
     ctx.font = '12px sans-serif';
-    ctx.fillText('Frame: ' + path, 10, 20);
+    if (asst_name != ""){
+      ctx.fillText('Frame: ' + path + ", " + asst_name, 10, 20);
+    } else{
+      ctx.fillText('Frame: ' + path, 10, 20);
+    }
   }
 }
 
@@ -70,14 +74,14 @@ function addFrameGroup(frame_id, areaId){
   document.getElementById(areaId).innerHTML +=base_html;
 }
 
-function loadData(images, keypoints, bbox, areaId){
+function loadData(images, keypoints, bbox, asst_name, areaId){
   for (let i = 0; i < images.length; i++) {
     addFrameGroup("frame" + i.toString(), areaId);
   }
   for (let i = 0; i < images.length; i++) {
-    addImage("frame" + i.toString() + "1_" + areaId, images[i][0], keypoints[i][0], bbox[i][0]);
-    addImage("frame" + i.toString() + "2_" + areaId, images[i][1], keypoints[i][1], bbox[i][1]);
-    addImage("frame" + i.toString() + "3_" + areaId, images[i][2], keypoints[i][2], bbox[i][2]);
+    addImage("frame" + i.toString() + "1_" + areaId, images[i][0], keypoints[i][0], bbox[i][0], asst_name[i]);
+    addImage("frame" + i.toString() + "2_" + areaId, images[i][1], keypoints[i][1], bbox[i][1], asst_name[i]);
+    addImage("frame" + i.toString() + "3_" + areaId, images[i][2], keypoints[i][2], bbox[i][2], asst_name[i]);
   }
 }
 
@@ -143,10 +147,15 @@ const editor = CodeMirror.fromTextArea(document.getElementById("code"), {
     },
     lineNumbers: true,
     indentUnit: 4,
-    matchBrackets: true
+    matchBrackets: true,
+    showCursorWhenSelecting: true,
+    autofocus: true,
+    cursorHeight: 1
 });
 
 editor.setSize(null,150);
+editor.focus();
+editor.setCursor(editor.lineCount(), 0);
 
 function checkClicked(){
   var assertions = editor.getValue();
@@ -170,6 +179,8 @@ function sendAssertionsToServer(assertions, checkbox){
   httpPost.send(data);
 
   document.getElementById("imageAreaAssertions").innerHTML = "";
+  document.getElementById('resTable').className = "table hidden_content";
+  document.getElementById("tableBody").innerHTML = "";
   document.getElementById("loadSpinner").className = "spinner-border"
   
   httpPost.onreadystatechange = function(err) {
@@ -186,8 +197,8 @@ function sendAssertionsToServer(assertions, checkbox){
         document.getElementById('asst_empty').className = "alert alert-warning alert-dismissible fade show";
         return;
       }
-
-      loadData(data['images'],data['keypoints'], data['bbox'], "imageAreaAssertions");
+      displayTable(data["asst_names"]);
+      loadData(data['images'].slice(0, 30),data['keypoints'].slice(0, 30), data['bbox'].slice(0, 30), data["asst_names"].slice(0, 30), "imageAreaAssertions");
     } else {
         console.log(err);
     }
@@ -199,6 +210,28 @@ function hideAlert(){
   document.getElementById('asst_empty').className = "alert alert-warning alert-dismissible fade show hidden_content";
 }
 
+function displayTable(asst_names){
+  document.getElementById('resTable').className = "table";
+  var table_content = document.getElementById("tableBody");
 
+  const output = asst_names.reduce(function (acc, curr) {
+    if (acc[curr]) {
+        acc[curr] = ++acc[curr];
+    } else {
+        acc[curr] = 1;
+    }
+    return acc;
+  }, {});
 
-  
+  for (const [key, value] of Object.entries(output)) {
+    const base_html = `
+    <tr>
+      <th scope="row">${key}</th>
+      <td>${value}</td>
+    </tr>
+    `;
+    table_content.innerHTML +=base_html;
+    
+  }
+
+}

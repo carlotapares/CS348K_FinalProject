@@ -16,6 +16,10 @@ dataset_json = json.load(open(DATASET_PATH + 'wimbledon_2019_womens_final_halep_
 app = Flask(__name__,static_folder='static',template_folder='templates')
 CORS(app)
 
+import logging
+log = logging.getLogger('werkzeug')
+log.setLevel(logging.ERROR)
+
 @app.route('/')
 def index():
   return render_template('index.html')
@@ -29,6 +33,7 @@ def search():
   frames_ = []
   keypoints_ = []
   bbox_ = []
+  asst_ = []
 
   for b in range(len(res)):
     for f in range(res[b].length()):
@@ -40,11 +45,15 @@ def search():
       frame_num_rel = res[b].get_frame_at(f).get_prediction().get_relative_frame_number()
 
       pred_1 = get_prediction(dataset_json, max(0,frame_num_rel - 1), player)
+      if pred_1 == None:
+        pred_1 = res[b].get_frame_at(f).get_prediction()
       keypoints_1 = pred_1.get_keypoints()
       bbox_1 = pred_1.get_bbox()
       prev = pred_1.get_real_frame_number()
 
       pred_3 = get_prediction(dataset_json, min(len(dataset_json['person'])-1,frame_num_rel + 1), player)
+      if pred_3 == None:
+        pred_3 = res[b].get_frame_at(f).get_prediction()
       keypoints_3 = pred_3.get_keypoints()
       bbox_3 = pred_3.get_bbox()
       next = pred_3.get_real_frame_number()
@@ -54,8 +63,9 @@ def search():
                         formated_keypoints(keypoints, bbox), 
                         formated_keypoints(keypoints_3, bbox_3)])
       bbox_.append([bbox_1, bbox, bbox_3])
+      asst_.append('')
 
-  data_ = {"images": frames_, "keypoints": keypoints_, "bbox": bbox_}
+  data_ = {"images": frames_, "keypoints": keypoints_, "bbox": bbox_, "asst_names": asst_}
   return json.dumps(data_)
 
 def formated_keypoints(keypoints, bbox):
@@ -92,11 +102,8 @@ def check():
       data_ = {"error": True, "images": [], "keypoints": [], "bbox": []}
       return json.dumps(data_)
 
-  print("Assertions", assertions)
-
-  #Max 385, 73
   res = get_dataset_subset(dataset_json, DATASET_PATH + 'wimbledon_2019_womens_final_halep_williams__fduc5bZx3ss',
-          content['checkbox'],385,73, False)
+          content['checkbox'],0,0, False)
 
   errors, _ = check_assertions(DATASET_PATH + 'wimbledon_2019_womens_final_halep_williams__fduc5bZx3ss', dataset_json, res, assertions, False)
 
@@ -107,9 +114,11 @@ def check():
   frames_ = []
   keypoints_ = []
   bbox_ = []
+  asst_ = []
 
   fn = errors['relative_frame_number'].tolist()
   pl = errors['player'].tolist()
+  asst = errors['assertion'].tolist()
 
   for ii, f in enumerate(fn):
     frame = get_prediction(dataset_json, f, pl[ii])
@@ -118,11 +127,15 @@ def check():
     player = frame.get_player()
 
     pred_1 = get_prediction(dataset_json, max(0,f - 1), player)
+    if pred_1 == None:
+      pred_1 = frame
     keypoints_1 = pred_1.get_keypoints()
     bbox_1 = pred_1.get_bbox()
     prev = pred_1.get_real_frame_number()
 
     pred_3 = get_prediction(dataset_json, min(len(dataset_json['person'])-1,f + 1), player)
+    if pred_3 == None:
+      pred_3 = frame
     keypoints_3 = pred_3.get_keypoints()
     bbox_3 = pred_3.get_bbox()
     next = pred_3.get_real_frame_number()
@@ -132,6 +145,17 @@ def check():
                       formated_keypoints(keypoints, bbox), 
                       formated_keypoints(keypoints_3, bbox_3)])
     bbox_.append([bbox_1, bbox, bbox_3])
+    asst_.append(asst[ii])
 
-  data_ = {"error" : False, "images": frames_, "keypoints": keypoints_, "bbox": bbox_}
+  data_ = {"error" : False, "images": frames_, "keypoints": keypoints_, "bbox": bbox_, "asst_names": asst_}
   return json.dumps(data_)
+
+
+# assertions = [{'keypoints': ['right_elbow','right_shoulder','right_wrist', 'right_shoulder'], 'type': 'spatial', 'attributes': ['above', 'above']}, \
+#             {'keypoints': ['left_shoulder','right_shoulder','left_knee', 'right_knee', 'left_hip', 'right_hip'], 'type': 'spatial', 'attributes': ['left', 'left', 'left']}, \
+#             {'keypoints': ['left_shoulder','right_shoulder','left_knee', 'right_knee', 'left_hip', 'right_hip'], 'type': 'spatial', 'attributes': ['right', 'right', 'right']}, \
+#             {'keypoints': ['left_elbow','right_elbow','left_wrist','right_wrist'], 'type': 'spatial', 'attributes': [('smaller', 0.05),('smaller', 0.15)]}, \
+#             {'keypoints': ['left_ankle','right_ankle','left_knee','right_knee'], 'type': 'spatial', 'attributes': [('smaller', 0.05),('smaller', 0.15)]}, \
+#             {'keypoints': ['head_top','head_bottom'], 'type': 'spatial', 'attributes': [('smaller', 0.25)]}, \
+#             {'keypoints': ['right_wrist'], 'type': 'temporal', 'attributes': [0.3]},
+#             {'keypoints': ['left_wrist'], 'type': 'temporal', 'attributes': [0.3]}]
