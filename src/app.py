@@ -97,7 +97,8 @@ def check():
     try:
       j = json.loads(a)
       assertions.append(j)
-    except:
+    except Exception as e:
+      print(e)
       print("Error in ", a)
       data_ = {"error": True, "images": [], "keypoints": [], "bbox": []}
       return json.dumps(data_)

@@ -198,7 +198,7 @@ function sendAssertionsToServer(assertions, checkbox){
         return;
       }
       displayTable(data["asst_names"]);
-      loadData(data['images'].slice(0, 30),data['keypoints'].slice(0, 30), data['bbox'].slice(0, 30), data["asst_names"].slice(0, 30), "imageAreaAssertions");
+      loadData(data['images'].slice(0, 90),data['keypoints'].slice(0, 90), data['bbox'].slice(0, 90), data["asst_names"].slice(0, 90), "imageAreaAssertions");
     } else {
         console.log(err);
     }
