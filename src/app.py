@@ -108,6 +108,8 @@ def check():
 
   errors, _ = check_assertions(DATASET_PATH + 'wimbledon_2019_womens_final_halep_williams__fduc5bZx3ss', dataset_json, res, assertions, False)
 
+  #errors.to_csv('errors.csv', index=False)
+
   if errors is None:
     data_ = {"error": False, "images": [], "keypoints": [], "bbox": []}
     return json.dumps(data_)
