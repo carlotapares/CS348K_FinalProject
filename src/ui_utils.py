@@ -122,9 +122,13 @@ class ConditionChecker:
 
       if prev == None or next == None:
         continue
-
-      if prev.get_bbox()[0] < pred.get_bbox()[0] and pred.get_bbox()[0] < next.get_bbox()[0]:
-        out.append(pred)
+      
+      if pred.get_player() == 'back':
+        if prev.get_bbox()[0] > pred.get_bbox()[0] and pred.get_bbox()[0] > next.get_bbox()[0]:
+          out.append(pred)
+      else:
+        if prev.get_bbox()[0] < pred.get_bbox()[0] and pred.get_bbox()[0] < next.get_bbox()[0]:
+          out.append(pred)
 
     return out
 
@@ -136,9 +140,13 @@ class ConditionChecker:
 
       if prev == None or next == None:
         continue
-
-      if prev.get_bbox()[0] > pred.get_bbox()[0] and pred.get_bbox()[0] > next.get_bbox()[0]:
-        out.append(pred)
+      
+      if pred.get_player() == 'back':
+        if prev.get_bbox()[0] < pred.get_bbox()[0] and pred.get_bbox()[0] < next.get_bbox()[0]:
+          out.append(pred)
+      else:
+        if prev.get_bbox()[0] > pred.get_bbox()[0] and pred.get_bbox()[0] > next.get_bbox()[0]:
+          out.append(pred)
 
     return out
 
