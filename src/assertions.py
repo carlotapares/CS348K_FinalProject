@@ -112,7 +112,7 @@ class AssertionChecker:
 
     def register_assertion(self, assertion: Assertion) -> None:
         if assertion.name() is None:
-            name = 'asst_{}'.format(len(self.assertions_))
+            name = 'asst_{}'.format(len(self.assertions_)+1)
             assertion.set_name(name)
             
         if assertion.name() in self.assertions_:

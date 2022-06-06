@@ -28,6 +28,7 @@ function addImage(canvasId, path, keypoints, bbox, asst_name){
       ctx.stroke();
     }
     ctx.font = '12px sans-serif';
+    ctx.fillStyle = 'white';
     if (asst_name != ""){
       ctx.fillText('Frame: ' + path + ", " + asst_name, 10, 20);
     } else{
