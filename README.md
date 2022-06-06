@@ -1,7 +1,7 @@
 <div align="center">
 <br>
 <h3>
-Correcting Assertions for error detection in human pose estimation
+Assertions for error detection in human pose estimation
 </h3>
 <h4>
 Carlota Parés-Morlans & Liana Patel
