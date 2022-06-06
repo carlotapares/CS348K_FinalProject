@@ -95,6 +95,7 @@ class Prediction:
     self.relative_frame_number_ = frame_number
 
 def get_player_list_position(file: dict, frame: int, player: str) -> int:
+  # return 0
   if len(file['person'][frame][1]) != 2:
     return -1
 

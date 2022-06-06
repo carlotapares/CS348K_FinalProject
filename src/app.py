@@ -10,8 +10,9 @@ from ui_utils import get_dataset_subset, check_assertions
 from matplotlib import colors
 
 DATASET_PATH = './static/dataset/'
+FILENAME = 'wimbledon_2019_womens_final_halep_williams__fduc5bZx3ss'
 
-dataset_json = json.load(open(DATASET_PATH + 'wimbledon_2019_womens_final_halep_williams__fduc5bZx3ss.pose.json', 'r'))
+dataset_json = json.load(open(DATASET_PATH + FILENAME + '.pose.json', 'r'))
 
 app = Flask(__name__,static_folder='static',template_folder='templates')
 CORS(app)
@@ -27,7 +28,7 @@ def index():
 @app.route('/search', methods = ['POST'])
 def search():
   content = request.get_json(silent=True)
-  res = get_dataset_subset(dataset_json, DATASET_PATH + 'wimbledon_2019_womens_final_halep_williams__fduc5bZx3ss',
+  res = get_dataset_subset(dataset_json, DATASET_PATH + FILENAME,
           content['checkbox'],int(content['batches']),int(content['frames']), False)
 
   frames_ = []
@@ -103,10 +104,10 @@ def check():
       data_ = {"error": True, "images": [], "keypoints": [], "bbox": []}
       return json.dumps(data_)
 
-  res = get_dataset_subset(dataset_json, DATASET_PATH + 'wimbledon_2019_womens_final_halep_williams__fduc5bZx3ss',
+  res = get_dataset_subset(dataset_json, DATASET_PATH + FILENAME,
           content['checkbox'],0,0, False)
 
-  errors, _ = check_assertions(DATASET_PATH + 'wimbledon_2019_womens_final_halep_williams__fduc5bZx3ss', dataset_json, res, assertions, False)
+  errors, _ = check_assertions(DATASET_PATH + FILENAME, dataset_json, res, assertions, False)
 
   #errors.to_csv('errors.csv', index=False)
 
