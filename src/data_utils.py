@@ -1,4 +1,3 @@
-import json
 import numpy as np
 
 W = 1920
@@ -56,7 +55,7 @@ class Prediction:
   def __init__(self) -> None:
     self.keypoints_ = {}
     self.bbox_ = None
-    self.player_ = None
+    self.person_ = None
     self.real_frame_number_ = -1
     self.relative_frame_number_ = -1
 
@@ -76,11 +75,11 @@ class Prediction:
   def set_bbox(self, bbox) -> None:
     self.bbox_ = bbox
 
-  def get_player(self) -> str:
-    return self.player_
+  def get_person(self) -> str:
+    return self.person_
 
-  def set_player(self, player: str) -> None:
-    self.player_ = player
+  def set_person(self, person: str) -> None:
+    self.person_ = person
 
   def get_real_frame_number(self) -> int:
     return self.real_frame_number_
@@ -94,37 +93,13 @@ class Prediction:
   def set_relative_frame_number(self, frame_number: int) -> None:
     self.relative_frame_number_ = frame_number
 
-def get_player_list_position(file: dict, frame: int, player: str) -> int:
-  # return 0
-  if len(file['person'][frame][1]) != 2:
-    return -1
+def get_bounding_box(file: dict, frame: int, person: int) -> tuple([int, int]):
+  if person >= len(file['person'][frame][1]): return None
+  return file['person'][frame][1][person]['xywh']
 
-  bbox1 = file['person'][frame][1][0]['xywh']
-  bbox2 = file['person'][frame][1][1]['xywh']
-  
-
-  _,y1,_,_ = bbox1
-  _,y2,_,_ = bbox2
-
-  back_player = 0 if y1 < y2 else 1
-  if player == 'back':
-    return back_player
-  else:
-    return abs(back_player -1)
-
-def get_bounding_box(file: dict, frame: int, player: str) -> tuple([int, int]):
-  player_pos = get_player_list_position(file, frame, player)
-  if player_pos == -1:
-    return None
-  return file['person'][frame][1][player_pos]['xywh']
-
-def get_keypoints(file: dict, frame: int, player: str) -> 'list[Keypoint]':
-  player_pos = get_player_list_position(file, frame, player)
-
-  if player_pos == -1:
-    return None
-
-  keypoints =  file['person'][frame][1][player_pos]['pose'][0]
+def get_keypoints(file: dict, frame: int, person: int) -> 'list[Keypoint]':
+  if person >= len(file['person'][frame][1]): return None
+  keypoints =  file['person'][frame][1][person]['pose'][0]
   out = []
 
   for i, k in enumerate(keypoints):
@@ -135,9 +110,9 @@ def get_keypoints(file: dict, frame: int, player: str) -> 'list[Keypoint]':
 def get_real_frame_number(file: dict, frame: int) -> int:
   return file['person'][frame][0]
 
-def get_prediction(file: dict, frame: int, player: str) -> Prediction:
-  keypoints = get_keypoints(file, frame, player)
-  bbox = get_bounding_box(file, frame, player)
+def get_prediction(file: dict, frame: int, person: int) -> Prediction:
+  keypoints = get_keypoints(file, frame, person)
+  bbox = get_bounding_box(file, frame, person)
 
   if not keypoints or not bbox:
     return None
@@ -145,7 +120,7 @@ def get_prediction(file: dict, frame: int, player: str) -> Prediction:
   p = Prediction()
   p.set_bbox(bbox)
   p.set_keypoints(keypoints)
-  p.set_player(player)
+  p.set_person(person)
   p.set_relative_frame_number(frame)
   p.set_real_frame_number(get_real_frame_number(file, frame))
   return p

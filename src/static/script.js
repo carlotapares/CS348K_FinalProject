@@ -105,6 +105,11 @@ document.getElementById("imageArea").innerHTML = "";
 httpPost.onreadystatechange = function(err) {
     if (httpPost.readyState == 4 && httpPost.status == 200){
         const data = httpPost.response;
+        const err = data['error']
+        if (err == true){
+          document.getElementById('search_filt').className = "alert alert-warning alert-dismissible fade show";
+          return;
+        }
         loadData(data['images'],data['keypoints'], data['bbox'], data['asst_names'], "imageArea");
     } else {
         console.log(err);
@@ -120,6 +125,10 @@ function searchClicked(){
       checkbox.push(group[i].value);
     }
   }
+  var minSize = document.getElementById('minSize').value;
+  var maxSize = document.getElementById('maxSize').value;
+  checkbox.push(minSize);
+  checkbox.push(maxSize);
   var batches = document.getElementById('batchRange').value;
   var frames = document.getElementById('frameRange').value;
   sendSelectionToServer(checkbox, batches, frames);
@@ -167,6 +176,10 @@ function checkClicked(){
       checkbox.push(group[i].value);
     }
   }
+  var minSize = document.getElementById('minSize_asst').value;
+  var maxSize = document.getElementById('maxSize_asst').value;
+  checkbox.push(minSize);
+  checkbox.push(maxSize);
   sendAssertionsToServer(assertions, checkbox);
 }
 
@@ -209,6 +222,7 @@ function sendAssertionsToServer(assertions, checkbox){
 function hideAlert(){
   document.getElementById('asst_syntax').className = "alert alert-warning alert-dismissible fade show hidden_content";
   document.getElementById('asst_empty').className = "alert alert-warning alert-dismissible fade show hidden_content";
+  document.getElementById('search_filt').className = "alert alert-warning alert-dismissible fade show hidden_content";
 }
 
 function displayTable(asst_names){

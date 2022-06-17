@@ -100,7 +100,7 @@ class LabellingError:
     d['frame_number'] = self.prediction_.get_real_frame_number()
     d['relative_frame_number'] = self.prediction_.get_relative_frame_number()
     d['prediction_idx'] = self.get_prediction_indx()
-    d['player'] = self.prediction_.get_player()
+    d['person'] = self.prediction_.get_person()
 
     return pd.DataFrame(d, index=[0])
 
@@ -239,7 +239,7 @@ class AssertionChecker:
           for jj in range(-2, 2):
             if jj == 0:
               continue
-            p2 = get_prediction(self.dataset_, max(0, p1.get_relative_frame_number()+jj), p1.get_player())
+            p2 = get_prediction(self.dataset_, max(0, p1.get_relative_frame_number()+jj), p1.get_person())
             if p2:
               x2,y2 = p2.get_keypoints()[kps[0]].position()
               dist.append(abs(distance.cdist([[x1,y1]], [[x2,y2]], 'euclidean')[0][0]))

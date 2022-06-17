@@ -37,14 +37,6 @@
             <li class="nav-item d-flex justify-content-center">
               <ul class="list-group">
                 <li class="list-group-item" style="text-align: left !important;">
-                  <input class="form-check-input me-1 check_exp" type="checkbox" value="player_front">
-                  Front player
-                </li>
-                <li class="list-group-item" style="text-align: left !important;">
-                  <input class="form-check-input me-1 check_exp" type="checkbox" value="player_back">
-                  Back player
-                </li>
-                <li class="list-group-item" style="text-align: left !important;">
                   <input class="form-check-input me-1 check_exp" type="checkbox" value="left">
                   Left
                 </li>
@@ -62,15 +54,25 @@
                 </li>
               </ul>
             </li>
-            <li class="nav-item" style="margin-top: 25px;">
-              <label for="batchRange" class="form-label" style="color: rgb(92, 92, 92); text-align: left;">Batches</label>
-              <input type="range" id="batchRange" class="form-range" value="1" min="1" max="100" oninput="this.nextElementSibling.value = this.value">
-              <output style="color: rgb(92, 92, 92);">1</output>
+            <li class="nav-item d-flex justify-content-center" style="margin-top: 25px;">
+              <label for="minSize" class="form-label" style="color: rgb(92, 92, 92); text-align: left; margin-bottom: 0px !important; margin-right: 5px !important;">Min Size</label>
+              <input style="width: 40% !important;" type="range" id="minSize" value="0" min="0" max="50" step="0.5" oninput="this.nextElementSibling.value = this.value">
+              <output style="color: rgb(92, 92, 92); margin-left: 5px !important;">0</output><p>%</p>
             </li>
-            <li class="nav-item" style="margin-top: 25px;">
-              <label for="frameRange" class="form-label" style="color: rgb(92, 92, 92); text-align: left;">Frames</label>
-              <input type="range" id="frameRange" class="form-range" value="1" min="1" max="20" oninput="this.nextElementSibling.value = this.value">
-              <output style="color: rgb(92, 92, 92);">1</output>
+            <li class="nav-item d-flex justify-content-center" style="margin-top: 25px;">
+              <label for="maxSize" class="form-label" style="color: rgb(92, 92, 92); text-align: left; margin-bottom: 0px !important; margin-right: 5px !important;">Max Size</label>
+              <input style="width: 40% !important;" type="range" id="maxSize" value="50" min="0" max="50" step="0.5" oninput="this.nextElementSibling.value = this.value">
+              <output style="color: rgb(92, 92, 92); margin-left: 5px !important;">50</output><p>%</p>
+            </li>
+            <li class="nav-item d-flex justify-content-center" style="margin-top: 25px;">
+              <label for="batchRange" class="form-label" style="color: rgb(92, 92, 92); text-align: left; margin-bottom: 0px !important; margin-right: 5px !important;">Batches</label>
+              <input style="width: 40% !important;" type="range" id="batchRange" value="1" min="1" max="100" step="1" oninput="this.nextElementSibling.value = this.value">
+              <output style="color: rgb(92, 92, 92); margin-left: 5px !important;">1</output>
+            </li>
+            <li class="nav-item d-flex justify-content-center" style="margin-top: 25px;">
+              <label for="frameRange" class="form-label" style="color: rgb(92, 92, 92); text-align: left; margin-bottom: 0px !important; margin-right: 5px !important;">Frames</label>
+              <input style="width: 40% !important;" type="range" id="frameRange" value="1" min="1" max="100" step="1" oninput="this.nextElementSibling.value = this.value">
+              <output style="color: rgb(92, 92, 92); margin-left: 5px !important;">1</output>
             </li>
             <li style="margin-top: 25px;" class="nav-item">
               <button id="searchButton" type="button" class="btn btn-secondary text-center" onclick="searchClicked()">Search</button>
@@ -79,6 +81,12 @@
         </div>
       </nav>
       <main role="main col" class="justify-content-center" style="width: 75% !important; padding: 15px !important; padding-bottom: 50px !important;">
+        <div id="search_filt" class="alert alert-warning alert-dismissible fade show hidden_content" role="alert">
+          <strong>Error!</strong> No frames were returned. Check filters.
+          <button type="button" class="close" onclick="hideAlert()">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
         <div class="container">
           <div class="row row-cols-auto justify-content-center" id="imageArea">
               <!-- Data added with JS -->
@@ -99,14 +107,6 @@
               <li class="nav-item d-flex justify-content-center">
                 <ul class="list-group">
                   <li class="list-group-item" style="text-align: left !important;">
-                    <input class="form-check-input me-1 check_asst" type="checkbox" value="player_front">
-                    Front player
-                  </li>
-                  <li class="list-group-item" style="text-align: left !important;">
-                    <input class="form-check-input me-1 check_asst" type="checkbox" value="player_back">
-                    Back player
-                  </li>
-                  <li class="list-group-item" style="text-align: left !important;">
                     <input class="form-check-input me-1 check_asst" type="checkbox" value="left">
                     Left
                   </li>
@@ -123,6 +123,16 @@
                     Fast
                   </li>
                 </ul>
+              </li>
+              <li class="nav-item d-flex justify-content-center" style="margin-top: 25px;">
+                <label for="minSize_asst" class="form-label" style="color: rgb(92, 92, 92); text-align: left; margin-bottom: 0px !important; margin-right: 5px !important;">Min Size</label>
+                <input style="width: 40% !important;" type="range" id="minSize_asst" value="0" min="0" max="50" step="0.5" oninput="this.nextElementSibling.value = this.value">
+                <output style="color: rgb(92, 92, 92); margin-left: 5px !important;">0</output><p>%</p>
+              </li>
+              <li class="nav-item d-flex justify-content-center" style="margin-top: 25px;">
+                <label for="maxSize_asst" class="form-label" style="color: rgb(92, 92, 92); text-align: left; margin-bottom: 0px !important; margin-right: 5px !important;">Max Size</label>
+                <input style="width: 40% !important;" type="range" id="maxSize_asst" value="50" min="0" max="50" step="0.5" oninput="this.nextElementSibling.value = this.value">
+                <output style="color: rgb(92, 92, 92); margin-left: 5px !important;">50</output><p>%</p>
               </li>
               <li style="margin-top: 25px;" class="nav-item">
                 <button id="checkButton" type="button" class="btn btn-secondary text-center" onclick="checkClicked()">Check</button>

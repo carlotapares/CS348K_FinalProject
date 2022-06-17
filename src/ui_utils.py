@@ -4,9 +4,9 @@ from enum import Enum
 from scipy.spatial import distance
 import pandas as pd
 
-from data_utils import Prediction, get_prediction
+from data_utils import Prediction, get_prediction, H
 from assertions import Assertion, AssertionChecker, AssertionFunction
-from viz import get_image_data, get_prediction_vis, get_image_data_from_video
+from viz import get_prediction_vis, get_image_data_from_video
 
 MIN_DIST_FAST_SPEED = 0.05 # 5% of the bbox height displacement per frame
 
@@ -57,8 +57,8 @@ class Batch:
     return self.len_
 
 class Condition(Enum):
-  PLAYER_FRONT = ('player_front', 'spatial')
-  PLAYER_BACK = ('player_back', 'spatial')
+  MIN_SIZE = ('min_size', 'spatial')
+  MAX_SIZE = ('max_size', 'spatial')
   DIRECTION_RIGHT = ('right', 'temporal')
   DIRECTION_LEFT = ('left', 'temporal')
   SPEED_SLOW = ('slow', 'temporal')
@@ -97,7 +97,7 @@ class ConditionChecker:
   def set_predictions(self, predictions: 'list[Prediction]') -> None:
     self.predictions_ = predictions
 
-  def check(self):
+  def check(self, value=None):
     if self.condition_ == Condition.DIRECTION_RIGHT:
         return self.__check_direction_right()
     elif self.condition_ == Condition.DIRECTION_LEFT:
@@ -106,10 +106,10 @@ class ConditionChecker:
       return self.__check_speed_fast()
     elif self.condition_ == Condition.SPEED_SLOW:
       return self.__check_speed_slow()
-    elif self.condition_ == Condition.PLAYER_BACK:
-      return self.__check_player_back()
-    elif self.condition_ == Condition.PLAYER_FRONT:
-      return self.__check_player_front()
+    elif self.condition_ == Condition.MIN_SIZE:
+      return self.__check_min_size(value)
+    elif self.condition_ == Condition.MAX_SIZE:
+      return self.__check_max_size(value)
     else:
       raise RuntimeError('Error. Non-existing condition')
 
@@ -117,36 +117,28 @@ class ConditionChecker:
   def __check_direction_right(self):
     out = []
     for pred in self.predictions_:
-      prev = get_prediction(self.dataset_, pred.get_relative_frame_number() - 1, pred.get_player())
-      next = get_prediction(self.dataset_, pred.get_relative_frame_number() + 1, pred.get_player())
+      prev = get_prediction(self.dataset_, pred.get_relative_frame_number() - 1, pred.get_person())
+      next = get_prediction(self.dataset_, pred.get_relative_frame_number() + 1, pred.get_person())
 
       if prev == None or next == None:
         continue
       
-      if pred.get_player() == 'back':
-        if prev.get_bbox()[0] > pred.get_bbox()[0] and pred.get_bbox()[0] > next.get_bbox()[0]:
-          out.append(pred)
-      else:
-        if prev.get_bbox()[0] < pred.get_bbox()[0] and pred.get_bbox()[0] < next.get_bbox()[0]:
-          out.append(pred)
+      if prev.get_bbox()[0] < pred.get_bbox()[0] and pred.get_bbox()[0] < next.get_bbox()[0]:
+        out.append(pred)
 
     return out
 
   def __check_direction_left(self):
     out = []
     for pred in self.predictions_:
-      prev = get_prediction(self.dataset_, pred.get_relative_frame_number() - 1, pred.get_player())
-      next = get_prediction(self.dataset_, pred.get_relative_frame_number() + 1, pred.get_player())
+      prev = get_prediction(self.dataset_, pred.get_relative_frame_number() - 1, pred.get_person())
+      next = get_prediction(self.dataset_, pred.get_relative_frame_number() + 1, pred.get_person())
 
       if prev == None or next == None:
         continue
       
-      if pred.get_player() == 'back':
-        if prev.get_bbox()[0] < pred.get_bbox()[0] and pred.get_bbox()[0] < next.get_bbox()[0]:
-          out.append(pred)
-      else:
-        if prev.get_bbox()[0] > pred.get_bbox()[0] and pred.get_bbox()[0] > next.get_bbox()[0]:
-          out.append(pred)
+      if prev.get_bbox()[0] > pred.get_bbox()[0] and pred.get_bbox()[0] > next.get_bbox()[0]:
+        out.append(pred)
 
     return out
 
@@ -154,8 +146,8 @@ class ConditionChecker:
     out = []
     for pred in self.predictions_:
       pred_bbox = pred.get_bbox()
-      prev = get_prediction(self.dataset_, pred.get_relative_frame_number() - 1, pred.get_player())
-      next = get_prediction(self.dataset_, pred.get_relative_frame_number() + 1, pred.get_player())
+      prev = get_prediction(self.dataset_, pred.get_relative_frame_number() - 1, pred.get_person())
+      next = get_prediction(self.dataset_, pred.get_relative_frame_number() + 1, pred.get_person())
 
       if prev == None or next == None:
         continue
@@ -175,8 +167,8 @@ class ConditionChecker:
     out = []
     for pred in self.predictions_:
       pred_bbox = pred.get_bbox()
-      prev = get_prediction(self.dataset_, pred.get_relative_frame_number() - 1, pred.get_player())
-      next = get_prediction(self.dataset_, pred.get_relative_frame_number() + 1, pred.get_player())
+      prev = get_prediction(self.dataset_, pred.get_relative_frame_number() - 1, pred.get_person())
+      next = get_prediction(self.dataset_, pred.get_relative_frame_number() + 1, pred.get_person())
 
       if prev == None or next == None:
         continue
@@ -192,17 +184,17 @@ class ConditionChecker:
 
     return out
 
-  def __check_player_back(self):
+  def __check_min_size(self, val):
     out = []
     for pred in self.predictions_:
-      if pred.get_player() == 'back':
+      if pred.get_bbox()[-1] > H*val/100:
         out.append(pred)
     return out
 
-  def __check_player_front(self):
+  def __check_max_size(self, val):
     out = []
     for pred in self.predictions_:
-      if pred.get_player() == 'front':
+      if pred.get_bbox()[-1] < H*val/100:
         out.append(pred)
     return out
 
@@ -231,56 +223,31 @@ class Predicate:
      
       lb += 1
 
-      frames_front = []
-      frames_back = []
+      frames = []
  
       for f in batch_frames:
-        pp = get_prediction(self.dataset_, f, "front")
-        if pp:
-          frames_front.append(pp)
-        pp = get_prediction(self.dataset_, f, "back")
-        if pp:
-          frames_back.append(pp)
-      if frames_front:
-        cond_checker_front = ConditionChecker(self.dataset_)
-        cond_checker_front.set_predictions(frames_front)
+        num_p = len(self.dataset_['person'][f][1])
+        for p in range(num_p):
+          pp = get_prediction(self.dataset_, f, p)
+          if pp:
+            frames.append(pp)
 
-        for condition in self.conditions_:
-          cond_checker_front.set_condition(condition)
-          frames_front = cond_checker_front.check()
-          cond_checker_front.set_predictions(frames_front)
-          if frames_front is None:
+      if frames:
+        cond_checker = ConditionChecker(self.dataset_)
+        cond_checker.set_predictions(frames)
+
+        for cond in self.conditions_:
+          condition, val = cond
+          cond_checker.set_condition(condition)
+          frames = cond_checker.check(val)
+          cond_checker.set_predictions(frames)
+          if frames is None:
             break
 
         # If frames passed conditions
-        if frames_front and len(out) < self.num_batches_:
+        if frames and len(out) < self.num_batches_:
           batch = Batch()
-          for f in frames_front:
-            if self.include_display_:
-              # img = get_image_data(self.path_, f.get_real_frame_number()+1)
-              img = get_image_data_from_video(self.path_ + self.filename_, f.get_real_frame_number())
-              data, w, h = get_prediction_vis(f, img)
-              frame = Frame(data, w, h, f)
-            else:
-              frame = Frame(None, -1, -1, f)
-            batch.add_frame(frame)
-          out.append(batch)
-        
-      if frames_back and len(out) < self.num_batches_:
-        cond_checker_back = ConditionChecker(self.dataset_)
-        cond_checker_back.set_predictions(frames_back)
-        
-        for condition in self.conditions_:
-          cond_checker_back.set_condition(condition)
-          frames_back = cond_checker_back.check()
-          cond_checker_back.set_predictions(frames_back)
-          if frames_back is None:
-            break
-
-        # If frames passed conditions
-        if frames_back:
-          batch = Batch()
-          for f in frames_back:
+          for f in frames:
             if self.include_display_:
               # img = get_image_data(self.path_, f.get_real_frame_number()+1)
               img = get_image_data_from_video(self.path_ + self.filename_, f.get_real_frame_number())
@@ -294,17 +261,19 @@ class Predicate:
 
 def get_dataset_subset(dataset_json: dict, filename: str, tags: 'list[str]', num_batches: int, batch_size: int, include_display=False) -> tuple(['list[Batch]', dict]):
   conditions = []
-
-  for tag in tags:
+  sizes = list(map(float,tags[-2:]))
+  for tag in tags[:-2]:
     if Condition.exists(tag):
       c = Condition.from_name(tag)
-      conditions.append(c)
+      conditions.append((c,None))
     else:
       raise RuntimeError('Tag ' + tag + ' is not supported')
   
-  if Condition.PLAYER_BACK in conditions and Condition.PLAYER_FRONT in conditions:
-    conditions.pop(conditions.index(Condition.PLAYER_BACK))
-    conditions.pop(conditions.index(Condition.PLAYER_FRONT))
+  if sizes[-1] <= sizes[0]: return
+  c = Condition.from_name('min_size')
+  conditions.append((c, sizes[0]))
+  c = Condition.from_name('max_size')
+  conditions.append((c, sizes[-1]))
 
   if Condition.DIRECTION_RIGHT in conditions and Condition.DIRECTION_LEFT in conditions:
     conditions.pop(conditions.index(Condition.DIRECTION_LEFT))

@@ -36,23 +36,27 @@ def search():
   bbox_ = []
   asst_ = []
 
+  if res == None or len(res) == 0:
+    data_ = {"error": True, "images": [], "keypoints": [], "bbox": []}
+    return json.dumps(data_)
+
   for b in range(len(res)):
     for f in range(res[b].length()):
       frame_num = res[b].get_frame_at(f).get_prediction().get_real_frame_number()
       keypoints = res[b].get_frame_at(f).get_prediction().get_keypoints()
       bbox = res[b].get_frame_at(f).get_prediction().get_bbox()
-      player = res[b].get_frame_at(f).get_prediction().get_player()
+      person = res[b].get_frame_at(f).get_prediction().get_person()
 
       frame_num_rel = res[b].get_frame_at(f).get_prediction().get_relative_frame_number()
 
-      pred_1 = get_prediction(dataset_json, max(0,frame_num_rel - 1), player)
+      pred_1 = get_prediction(dataset_json, max(0,frame_num_rel - 1), person)
       if pred_1 == None:
         pred_1 = res[b].get_frame_at(f).get_prediction()
       keypoints_1 = pred_1.get_keypoints()
       bbox_1 = pred_1.get_bbox()
       prev = pred_1.get_real_frame_number()
 
-      pred_3 = get_prediction(dataset_json, min(len(dataset_json['person'])-1,frame_num_rel + 1), player)
+      pred_3 = get_prediction(dataset_json, min(len(dataset_json['person'])-1,frame_num_rel + 1), person)
       if pred_3 == None:
         pred_3 = res[b].get_frame_at(f).get_prediction()
       keypoints_3 = pred_3.get_keypoints()
@@ -66,7 +70,7 @@ def search():
       bbox_.append([bbox_1, bbox, bbox_3])
       asst_.append('')
 
-  data_ = {"images": frames_, "keypoints": keypoints_, "bbox": bbox_, "asst_names": asst_}
+  data_ = {"error": False, "images": frames_, "keypoints": keypoints_, "bbox": bbox_, "asst_names": asst_}
   return json.dumps(data_)
 
 def formated_keypoints(keypoints, bbox):
@@ -121,23 +125,23 @@ def check():
   asst_ = []
 
   fn = errors['relative_frame_number'].tolist()
-  pl = errors['player'].tolist()
+  pl = errors['person'].tolist()
   asst = errors['assertion'].tolist()
 
   for ii, f in enumerate(fn):
     frame = get_prediction(dataset_json, f, pl[ii])
     keypoints = frame.get_keypoints()
     bbox = frame.get_bbox()
-    player = frame.get_player()
+    person = frame.get_person()
 
-    pred_1 = get_prediction(dataset_json, max(0,f - 1), player)
+    pred_1 = get_prediction(dataset_json, max(0,f - 1), person)
     if pred_1 == None:
       pred_1 = frame
     keypoints_1 = pred_1.get_keypoints()
     bbox_1 = pred_1.get_bbox()
     prev = pred_1.get_real_frame_number()
 
-    pred_3 = get_prediction(dataset_json, min(len(dataset_json['person'])-1,f + 1), player)
+    pred_3 = get_prediction(dataset_json, min(len(dataset_json['person'])-1,f + 1), person)
     if pred_3 == None:
       pred_3 = frame
     keypoints_3 = pred_3.get_keypoints()
