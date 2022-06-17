@@ -9,8 +9,10 @@ from data_utils import get_prediction, PoseTrack_Keypoint_Pairs
 from ui_utils import get_dataset_subset, check_assertions
 from matplotlib import colors
 
-DATASET_PATH = './static/dataset/'
-FILENAME = 'wimbledon_2019_womens_final_halep_williams__fduc5bZx3ss'
+
+FILENAME = 'SNMOT-061'
+FILE_EXTENSION = '.jpg'
+DATASET_PATH = './static/dataset/' + FILENAME + '/'
 
 dataset_json = json.load(open(DATASET_PATH + FILENAME + '.pose.json', 'r'))
 
@@ -63,7 +65,7 @@ def search():
       bbox_3 = pred_3.get_bbox()
       next = pred_3.get_real_frame_number()
 
-      frames_.append([str(prev+1).zfill(4), str(frame_num+1).zfill(4), str(next + 1).zfill(4)])
+      frames_.append([formated_frame(prev+1), formated_frame(frame_num+1), formated_frame(next + 1)])
       keypoints_.append([formated_keypoints(keypoints_1, bbox_1),
                         formated_keypoints(keypoints, bbox), 
                         formated_keypoints(keypoints_3, bbox_3)])
@@ -72,6 +74,9 @@ def search():
 
   data_ = {"error": False, "images": frames_, "keypoints": keypoints_, "bbox": bbox_, "asst_names": asst_}
   return json.dumps(data_)
+
+def formated_frame(frame_num):
+  return FILENAME + '/frames/thumb' + str(frame_num).zfill(4) + FILE_EXTENSION
 
 def formated_keypoints(keypoints, bbox):
   x,y,_,_ = list(map(int, bbox))
@@ -148,7 +153,7 @@ def check():
     bbox_3 = pred_3.get_bbox()
     next = pred_3.get_real_frame_number()
 
-    frames_.append([str(prev+1).zfill(4), str(frame.get_real_frame_number()+1).zfill(4), str(next + 1).zfill(4)])
+    frames_.append([formated_frame(prev+1), formated_frame(frame.get_real_frame_number()+1), formated_frame(next + 1)])
     keypoints_.append([formated_keypoints(keypoints_1, bbox_1),
                       formated_keypoints(keypoints, bbox), 
                       formated_keypoints(keypoints_3, bbox_3)])

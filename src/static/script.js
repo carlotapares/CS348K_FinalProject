@@ -7,10 +7,11 @@ function addImage(canvasId, path, keypoints, bbox, asst_name){
 
   canvas.style["display"] = "inline";
   const image = new Image();
-  image.src = "./static/dataset/frames/thumb" + path + ".png";
+  image.src = "./static/dataset/" + path;
   image.style.width = 'auto';
   image.style.height = '300px';
   image.addEventListener('load', render);
+  var frame_num = path.split("thumb")[1].split(".")[0]
 
   function render() {
     const newx = (200 - bbox[2])/2;
@@ -28,11 +29,11 @@ function addImage(canvasId, path, keypoints, bbox, asst_name){
       ctx.stroke();
     }
     ctx.font = '12px sans-serif';
-    ctx.fillStyle = 'white';
+    ctx.fillStyle = 'rgb(0, 255, 255)';
     if (asst_name != ""){
-      ctx.fillText('Frame: ' + path + ", " + asst_name, 10, 20);
+      ctx.fillText('Frame: ' + frame_num + ", " + asst_name, 10, 20);
     } else{
-      ctx.fillText('Frame: ' + path, 10, 20);
+      ctx.fillText('Frame: ' + frame_num, 10, 20);
     }
   }
 }
