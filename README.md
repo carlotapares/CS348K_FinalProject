@@ -52,17 +52,9 @@ pip install -r requirements.txt
 
 ### Dataset
 
-For the system to work, the ``` .json ``` file containing the estimated human poses needs to be placed in the following path ``` ./src/static/dataset/ ```.
-Regarding the video frames, the system requires a folder that contains all the frames extracted from the original video. 
-The following command can be used:
-```bash
-dest_folder='./src/static/dataset/frames'
-ffmpeg -i <video_name>.mp4 -vf fps=25 $dest_folder/thumb%04d.png
-```
-If frames have already been extracted and have a different name, the variable ```image.src```, found at line [10](https://github.com/carlotapares/CS348K_FinalProject/blob/main/src/static/script.js#:~:text=()%3B-,image.src,-%3D%20%22./static/dataset) from the file [script.js](https://github.com/carlotapares/CS348K_FinalProject/blob/main/src/static/script.js#:~:text=()%3B-,image.src,-%3D%20%22./static/dataset), needs to be changed accordingly.
-The filename of the ``` .json ``` needs to be specified in the variable [FILENAME](https://github.com/carlotapares/CS348K_FinalProject/blob/dea823caea8203e558db78eecd2ac991f70762e6/src/app.py#L13) from the file [app.py](https://github.com/carlotapares/CS348K_FinalProject/blob/dea823caea8203e558db78eecd2ac991f70762e6/src/app.py#L13).
-Note the file does not include an extension (it is expected to be ```.pose.json```).
-
+For the system to work, the ``` .json ``` file containing the estimated human poses needs to be placed in the following path ```./src/static/dataset/[dataset_name]/[dataset_name].pose.json```. Note the extension ```.pose.json```.
+Regarding the video frames, the system requires a folder that contains all the frames extracted from the original video ```./src/static/dataset/[dataset_name]/frames/```. The system expects frames to be named as ```thumb[frame_number].[jpg|png]```. The frame number must have at least 4 digits. For instance, the image that corresponds to frame 1 would be named as ```thumb0001.png```.
+The dataset name needs to be specified in the variable [FILENAME](https://github.com/carlotapares/CS348K_FinalProject/blob/9d5abce697b09ddf2aff02eb95833ce492b6f7c5/src/app.py#L13) from the file [app.py](https://github.com/carlotapares/CS348K_FinalProject/blob/9d5abce697b09ddf2aff02eb95833ce492b6f7c5/src/app.py#L13). The file extension needs to be specified in the variable [FILE_EXTENSION](https://github.com/carlotapares/CS348K_FinalProject/blob/9d5abce697b09ddf2aff02eb95833ce492b6f7c5/src/app.py#L14) from the file [app.py](https://github.com/carlotapares/CS348K_FinalProject/blob/9d5abce697b09ddf2aff02eb95833ce492b6f7c5/src/app.py#L14)
 ### Bring up the server
 
 The main file for this project is ```./src/app.py```. To run it, after requirements have been installed using ```pip install -r requirements.txt```, please run the following command.
@@ -183,4 +175,4 @@ The system expects a json that follows the following format:
 }
 ```
 Where ```876``` is the frame number for poses included in this element.
-Note that the order of the keypoints inside the ```pose``` array follow [COCO Keypoint Ordering]([https://github.com/carlotapares/CS348K_FinalProject/blob/main/src/data_utils.py#:~:text=%5D-,PoseTrack_COCO_Keypoint_Ordering,-%3D%20%5B](https://github.com/carlotapares/CS348K_FinalProject/blob/10a45951f2e53046a95c2547d0a144017e2ed49c/src/data_utils.py#L24)). Currently, the system expects 2 poses in the ```pose``` array, one for the front player and another one for the back player.
+Note that the order of the keypoints inside the ```pose``` array follow [COCO Keypoint Ordering]([https://github.com/carlotapares/CS348K_FinalProject/blob/main/src/data_utils.py#:~:text=%5D-,PoseTrack_COCO_Keypoint_Ordering,-%3D%20%5B](https://github.com/carlotapares/CS348K_FinalProject/blob/10a45951f2e53046a95c2547d0a144017e2ed49c/src/data_utils.py#L24)).
